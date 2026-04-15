@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plantsale-search
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - image: docker.io/library/mariadb:11.3
+        name: db
+        env:
+          - name:  MARIADB_ROOT_PASSWORD
+            value: password
+        ports:
+        - containerPort: 3306
+          hostPort: 3307
+  selector:
+    matchLabels:
+      app: plantsale-search

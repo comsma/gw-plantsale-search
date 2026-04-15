@@ -1,89 +1,76 @@
 {{define "plant_list"}}
 {{if not .Plants}}
-<div class="p-7 text-center text-[#837d83] bg-white rounded-[20px] border border-dashed border-line">
-  No plants matched those filters. Try clearing one or two filters.
+<div class="p-7 text-center bg-white rounded-[20px] border border-dashed border-line flex flex-col items-center gap-3">
+  <p class="text-xl font-bold text-gray-500 m-0">No plants matched those filters.</p>
+  {{if or .Section .Sun .Soil}}
+  <button
+    type="button"
+    class="btn btn-warning"
+    onclick="document.querySelectorAll('#filter-form select[name=section], #filter-form select[name=sun], #filter-form select[name=soil]').forEach(s => s.value = '')"
+    hx-get="/plants?search={{.Search}}"
+    hx-target="#plant-list"
+    hx-push-url="true"
+  >Clear filters</button>
+  {{else}}
+  <p class="text-gray-400 text-sm m-0">Try a different search term.</p>
+  {{end}}
 </div>
 {{else}}
-
-<!-- Desktop table -->
-<div class="overflow-auto bg-white border border-elderberry/[0.08] rounded-[22px] shadow-md max-md:hidden">
-  <table class="w-full border-collapse min-w-[860px]">
-    <thead class="bg-elderberry text-white">
-      <tr>
-        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Name</th>
-        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Bloom Color</th>
-        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Bloom Time</th>
-        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Height</th>
-        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Sun</th>
-        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Soil</th>
-        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Group</th>
-        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Price</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{range .Plants}}
-      <tr class="border-b border-line hover:bg-[#faf8f6] even:bg-[#fdfcfc]">
-        <td class="px-3 py-2.5">
-          <button
-            class="name-cell text-left"
-            hx-get="/plants/{{.Taxon}}"
-            hx-target="#drawer-content"
-            hx-swap="innerHTML"
-            hx-on::after-request="window.dispatchEvent(new Event('open-drawer'))"
-            type="button"
-          >
-            <span class="block font-black text-elderberry">{{.Common}}</span>
-            <span class="sci">{{.Scientific}}</span>
-          </button>
-        </td>
-        <td class="px-3 py-2.5 text-[0.88rem]">{{.Color}}</td>
-        <td class="px-3 py-2.5 text-[0.88rem]">{{.Bloom}}</td>
-        <td class="px-3 py-2.5 text-[0.88rem]">{{.Height}}</td>
-        <td class="px-3 py-2.5 text-[0.88rem]">{{.Sun}}</td>
-        <td class="px-3 py-2.5 text-[0.88rem]">{{.Soil}}</td>
-        <td class="px-3 py-2.5 text-[0.88rem]">{{.Section}}</td>
-        <td class="px-3 py-2.5 text-[0.88rem]">{{.Price}}</td>
-      </tr>
-      {{end}}
-    </tbody>
-  </table>
-</div>
-
-<!-- Mobile cards -->
-<div class="hidden max-md:grid gap-2.5">
+<div class="grid grid-cols-3 gap-4 max-md:grid-cols-1">
   {{range .Plants}}
-  <div class="mobile-plant bg-white border border-elderberry/8 rounded-[20px] shadow-sm p-4">
-    <button
-      class="text-left w-full"
-      hx-get="/plants/{{.Taxon}}"
-      hx-target="#drawer-content"
-      hx-swap="innerHTML"
-      hx-on::after-request="window.dispatchEvent(new Event('open-drawer'))"
-      type="button"
-    >
-      <span class="block font-black text-elderberry text-[1rem]">{{.Common}}</span>
-      <span class="block italic text-[#8a858b] text-[0.82rem] mb-2">{{.Scientific}}</span>
-    </button>
-    <div class="mobile-tags">
-      <span>{{.Sun}}</span>
-      <span>{{.Soil}}</span>
-      <span>{{.Bloom}}</span>
-      <span>{{.Height}}</span>
-      <span>{{.Price}}</span>
+  <button
+    class="plant-card text-left bg-white rounded-[18px] border border-line shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+    hx-get="/plants/{{.Taxon}}"
+    hx-target="#drawer-content"
+    hx-swap="innerHTML"
+    hx-on::after-request="window.dispatchEvent(new Event('open-drawer'))"
+    type="button"
+  >
+    <!-- Image -->
+    <div class="aspect-[4/3] bg-gradient-to-br from-prickly/[0.15] to-stem/10 overflow-hidden">
+      {{if .ImageURL}}
+      <img src="{{.ImageURL}}" alt="{{.Common}}" class="w-full h-full object-cover" />
+      {{else}}
+      <div class="w-full h-full grid place-items-center text-[2.5rem] opacity-40">🌿</div>
+      {{end}}
     </div>
-    <div class="mobile-actions">
-      <button
-        class="text-stem font-black text-[0.82rem]"
-        hx-get="/plants/{{.Taxon}}"
-        hx-target="#drawer-content"
-        hx-swap="innerHTML"
-        hx-on::after-request="window.dispatchEvent(new Event('open-drawer'))"
-        type="button"
-      >Details →</button>
+
+    <!-- Body -->
+    <div class="p-4">
+      <div class="flex flex-row justify-between">
+        <div>
+          <p class="font-black text-elderberry text-[1rem] leading-snug m-0">{{.Common}}</p>
+        <p class="italic text-[#8a858b] text-[0.78rem] mt-0.5 mb-3 m-0">{{.Scientific}}</p>
+        </div>
+        {{ if .Available }}
+          <span class="badge badge-soft bg-green-500/5 font-black text-stem ">Available</span>
+        {{ else }}
+          <span class="badge badge-soft bg-red-700/5 font-black text-red-700 ">Not Available</span>
+        {{ end }}
+      </div>
+
+
+      <div class="flex flex-wrap gap-1.5 mb-3">
+        {{if .Sun}}<span class="plant-tag">{{.Sun}}</span>{{end}}
+        {{if .Soil}}<span class="plant-tag">{{.Soil}}</span>{{end}}
+        {{if .Bloom}}<span class="plant-tag">{{.Bloom}}</span>{{end}}
+        {{if .Height}}<span class="plant-tag">{{.Height}}</span>{{end}}
+      </div>
+
+      <div class="flex items-center justify-between">
+        <span class="font-black text-stem text-[0.95rem]">{{.Price}}</span>
+        <span class="text-[0.78rem] font-black text-elderberry/60">Details →</span>
+      </div>
     </div>
+  </button>
+  {{end}}
+  {{if .HasMore}}
+  <div class="col-span-full"
+    hx-get="{{.NextPageURL}}"
+    hx-trigger="intersect once"
+    hx-swap="outerHTML">
   </div>
   {{end}}
 </div>
-
 {{end}}
 {{end}}

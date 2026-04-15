@@ -14,12 +14,12 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 COPY --from=css-builder /app/ui/static/css /app/ui/static/css
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /plantsale-search ./cmd/web
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /plantsale ./cmd/plantsale
 
 # Stage 3: Runtime — assets are embedded via embed.FS, binary is self-contained
 FROM scratch
 COPY --from=go-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=go-builder /plantsale-search /plantsale-search
+COPY --from=go-builder /plantsale /plantsale
 
 EXPOSE 8080
-ENTRYPOINT ["/plantsale-search"]
+ENTRYPOINT ["/plantsale"]

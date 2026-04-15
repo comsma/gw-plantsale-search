@@ -1,6 +1,7 @@
 package inatrualist
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"golang.org/x/net/http2"
+	"golang.org/x/time/rate"
 )
 
 type Plant struct {
@@ -23,6 +25,9 @@ type Plant struct {
 }
 
 var htmlTagRe = regexp.MustCompile(`<[^>]+>`)
+
+// limiter enforces the iNaturalist API limit of 60 requests/minute.
+var limiter = rate.NewLimiter(rate.Every(time.Second), 1)
 
 var client = func() *http.Client {
 	transport := &http.Transport{
@@ -43,6 +48,10 @@ var client = func() *http.Client {
 }()
 
 func GetPlantDetails(taxon int) (*Plant, error) {
+	if err := limiter.Wait(context.Background()); err != nil {
+		return nil, fmt.Errorf("rate limiter: %w", err)
+	}
+
 	url := fmt.Sprintf("https://api.inaturalist.org/v1/taxa/%d", taxon)
 
 	resp, err := client.Get(url)

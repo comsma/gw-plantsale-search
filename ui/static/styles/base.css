@@ -1,5 +1,7 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui" {
+  themes: false;
+}
 
 @source "../../../ui/views/**/*.gohtml";
 
@@ -17,6 +19,51 @@
   --font-kalam: "Kalam", cursive;
   --font-lato: "Lato", sans-serif;
   --font-lora: "Lora", serif;
+}
+
+/* ── DaisyUI plantsale theme ─────────────────────────────────────── */
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --color-base-100: #F3F1EF;   /* dragonfly — page background */
+  --color-base-200: #ebe6e2;   /* soft — card/panel backgrounds */
+  --color-base-300: #dfd9d4;   /* line — borders, dividers */
+  --color-base-content: #414042; /* chickadee — body text */
+
+  /* Primary — stem green (CTAs, active states) */
+  --color-primary: #35723F;
+  --color-primary-content: #ffffff;
+
+  /* Secondary — prickly olive (secondary actions) */
+  --color-secondary: #8CA45D;
+  --color-secondary-content: #ffffff;
+
+  /* Accent — monarch orange (highlights, badges) */
+  --color-accent: #DC582A;
+  --color-accent-content: #ffffff;
+
+  /* Neutral — elderberry purple (header, dark panels) */
+  --color-neutral: #3E2148;
+  --color-neutral-content: #ffffff;
+
+  /* State colors */
+  --color-info: #8CA45D;
+  --color-info-content: #ffffff;
+  --color-success: #35723F;
+  --color-success-content: #ffffff;
+  --color-warning: #F1BE48;
+  --color-warning-content: #414042;
+  --color-error: #DC582A;
+  --color-error-content: #ffffff;
+
+  /* Shape tokens */
+  --radius-selector: 9999px;  /* pill-shaped selects/toggles */
+  --radius-field: 1rem;       /* inputs, selects */
+  --radius-box: 1.5rem;       /* cards, panels */
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
 }
 
 /* ── Splash gradient ─────────────────────────────────────────────── */
@@ -116,4 +163,9 @@ body.modal-open {
 }
 .mobile-actions {
   @apply flex gap-2 flex-wrap;
+}
+
+/* ── Plant card tag chips ────────────────────────────────────────── */
+.plant-tag {
+  @apply inline-flex items-center px-2 py-0.5 rounded-full bg-[#f3efeb] text-elderberry text-[0.68rem] font-bold;
 }

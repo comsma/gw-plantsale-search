@@ -1,0 +1,113 @@
+# ── Persistent storage for MariaDB ──────────────────────────────────────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plantsale-db-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+
+# ── Database ─────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Pod
+metadata:
+  name: plantsale-db
+spec:
+  containers:
+    - name: mariadb
+      image: docker.io/library/mariadb:11.3
+      env:
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: plantsale-db-secret
+              key: root-password
+      volumeMounts:
+        - name: db-data
+          mountPath: /var/lib/mysql
+      ports:
+        - containerPort: 3306
+  volumes:
+    - name: db-data
+      persistentVolumeClaim:
+        claimName: plantsale-db-pvc
+
+---
+
+# ── Application ───────────────────────────────────────────────────────────────
+# Init containers run in order before the web server starts:
+#   1. db-init  — waits for MariaDB to be ready, then creates the database and
+#                 user if they do not already exist.
+#   2. migrate  — runs `plantsale migrate up` to apply any pending migrations.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: plantsale-app
+spec:
+  initContainers:
+    - name: db-init
+      image: docker.io/library/mariadb:11.3
+      command:
+        - sh
+        - -c
+        - |
+          until MYSQL_PWD="$ROOT_PASSWORD" mysqladmin ping -h plantsale-db -u root --silent 2>/dev/null; do
+            echo "waiting for database..."; sleep 2
+          done
+          MYSQL_PWD="$ROOT_PASSWORD" mysql -h plantsale-db -u root \
+            -e "CREATE DATABASE IF NOT EXISTS plantsale_search;" \
+            -e "CREATE USER IF NOT EXISTS 'plantsale_user'@'%' IDENTIFIED BY '$USER_PASSWORD';" \
+            -e "GRANT ALL PRIVILEGES ON plantsale_search.* TO 'plantsale_user'@'%';" \
+            -e "FLUSH PRIVILEGES;"
+      env:
+        - name: ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: plantsale-db-secret
+              key: root-password
+        - name: USER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: plantsale-db-secret
+              key: user-password
+
+    - name: migrate
+      image: localhost/plantsale:latest
+      args: ["migrate", "up"]
+      env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: plantsale-db-secret
+              key: database-url
+
+  containers:
+    - name: web
+      image: localhost/plantsale:latest
+      args: ["serve"]
+      env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: plantsale-db-secret
+              key: database-url
+      ports:
+        - containerPort: 8080
+          hostPort: 8080
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 8080
+        initialDelaySeconds: 5
+        periodSeconds: 10
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 8080
+        initialDelaySeconds: 15
+        periodSeconds: 30

@@ -1,5 +1,7 @@
 .idea
-
+.env
 node_modules
 
 ui/static/css/output.css
+
+deployment/production/secret.yml
