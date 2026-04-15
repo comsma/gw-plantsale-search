@@ -1,12 +1,17 @@
 package inatrualist
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"log"
+	"net"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"golang.org/x/net/http2"
 )
 
 type Plant struct {
@@ -19,7 +24,23 @@ type Plant struct {
 
 var htmlTagRe = regexp.MustCompile(`<[^>]+>`)
 
-var client = &http.Client{Timeout: 8 * time.Second}
+var client = func() *http.Client {
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12},
+		DialContext: (&net.Dialer{
+			Timeout:   15 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ResponseHeaderTimeout: 10 * time.Second,
+	}
+	err := http2.ConfigureTransport(transport)
+	if err != nil {
+		log.Printf("http2.ConfigureTransport: %v", err)
+		return nil
+	}
+	return &http.Client{Timeout: 15 * time.Second, Transport: transport}
+}()
 
 func GetPlantDetails(taxon int) (*Plant, error) {
 	url := fmt.Sprintf("https://api.inaturalist.org/v1/taxa/%d", taxon)

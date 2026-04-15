@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -90,6 +91,8 @@ func (h *Handler) PlantDetail(c *echo.Context) error {
 		data.Summary = details.Summary
 		data.ImageURL = details.ImageUrl
 		data.ImageAttribution = details.ImageAttribution
+	} else {
+		log.Printf("Failed to fetch plant details for taxon %d: %v", taxon, err)
 	}
 
 	return c.Render(http.StatusOK, "partials/plant_detail.gohtml", data)
