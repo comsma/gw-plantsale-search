@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/comsma/gw-plantsale-search/ui"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 )
@@ -18,7 +19,7 @@ func main() {
 	e.Renderer = tmpl
 	e.Use(middleware.Gzip())
 	e.Use(middleware.RequestLogger())
-	e.Static("/static", "ui/static")
+	e.StaticFS("/static", ui.Static)
 
 	h := &Handler{}
 	e.GET("/", h.Home)
