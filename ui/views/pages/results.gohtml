@@ -1,0 +1,130 @@
+{{template "layout" .}}
+
+{{define "content"}}
+  <header class="bg-elderberry text-white px-[18px] pt-[22px] pb-[18px] text-center shadow-[0_6px_18px_rgba(62,33,72,.08)]">
+    <h1 class="font-kalam text-[clamp(1.8rem,5vw,2.4rem)] leading-[1.15] m-0">
+      🌿 What Should I Plant Here?
+    </h1>
+    <p class="mt-1.5 mb-0 text-[0.92rem] text-white/82">
+      Wild Ones Gibson Woods &bull; Native Plant Sale &bull; May 2, 2026
+    </p>
+  </header>
+
+  <main class="max-w-[1150px] mx-auto px-4 pt-[26px] pb-6">
+
+    <!-- Top summary row -->
+    <div class="grid grid-cols-[1.4fr_0.85fr] gap-[18px] items-start max-lg:grid-cols-1">
+
+      <!-- Match summary -->
+      <div class="bg-white border border-elderberry/[0.08] rounded-[26px] shadow-md p-[22px_20px]">
+        <h2 class="font-kalam text-elderberry text-[1.9rem] m-0 mb-1.5">Your plant matches</h2>
+        <p class="m-0 text-[#6d6870] leading-[1.65]">
+          Filtered for
+          <span>{{if .Sun}}{{.Sun}}{{else}}any sun{{end}}</span> &bull;
+          <span>{{if .Soil}}{{.Soil}}{{else}}any soil{{end}}</span> &bull;
+          <span>{{if .Section}}{{.Section}}{{else}}all groups{{end}}</span>
+        </p>
+        <div class="flex gap-2.5 flex-wrap mt-4">
+          <a
+            href="/"
+            class="border-2 border-elderberry rounded-full px-6 py-3 font-black cursor-pointer transition-all duration-200 hover:opacity-90 hover:-translate-y-px bg-transparent text-elderberry no-underline inline-block"
+          >← Start Over</a>
+        </div>
+      </div>
+
+      <!-- Info chip panel -->
+      <div class="bg-gradient-to-br from-prickly/[0.16] to-goldenrod/[0.18] border border-elderberry/[0.08] rounded-[26px] shadow-md p-[22px_20px]">
+        <h3 class="m-0 mb-2 text-elderberry text-[1.25rem]">Plan your list before the sale</h3>
+        <p class="m-0 mb-3.5 text-[#615c61] leading-[1.65]">
+          Click any plant name to open photos and more info.
+        </p>
+        <div class="mt-3.5 p-[12px_14px] rounded-[16px] bg-[#f5f8f1] text-[#46603e] leading-[1.65] text-[0.92rem] border border-stem/[0.14]">
+          A simple way to help pollinators is to pick a mix of plants that bloom at different times,
+          so something is flowering from spring into fall.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Filter / search controls -->
+    <form
+      id="filter-form"
+      hx-get="/plants"
+      hx-target="#plant-list"
+      hx-swap="innerHTML"
+      hx-trigger="change, input delay:300ms"
+      hx-push-url="true"
+      class="mt-[18px] bg-white border border-elderberry/[0.08] rounded-[22px] shadow-md p-4 max-md:p-3.5"
+    >
+      <div class="grid grid-cols-[1.45fr_repeat(4,0.8fr)_auto] gap-2.5 max-lg:grid-cols-2 max-md:grid-cols-1">
+
+        <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
+          <input
+            name="search"
+            type="text"
+            placeholder="Search plant name or scientific name"
+            value="{{.Search}}"
+            class="w-full border-none outline-none bg-transparent text-chickadee"
+          />
+        </div>
+
+        <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
+          <select name="section" class="w-full border-none outline-none bg-transparent text-chickadee">
+            <option value="">All groups</option>
+            {{range .Sections}}
+            <option value="{{.}}" {{if eq . $.Section}}selected{{end}}>{{.}}</option>
+            {{end}}
+          </select>
+        </div>
+
+        <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
+          <select name="sun" class="w-full border-none outline-none bg-transparent text-chickadee">
+            <option value="">All sun</option>
+            {{range .Suns}}
+            <option value="{{.}}" {{if eq . $.Sun}}selected{{end}}>{{.}}</option>
+            {{end}}
+          </select>
+        </div>
+
+        <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
+          <select name="soil" class="w-full border-none outline-none bg-transparent text-chickadee">
+            <option value="">All soil</option>
+            {{range .Soils}}
+            <option value="{{.}}" {{if eq . $.Soil}}selected{{end}}>{{.}}</option>
+            {{end}}
+          </select>
+        </div>
+
+        <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
+          <select name="sort" class="w-full border-none outline-none bg-transparent text-chickadee">
+            <option value="common" {{if eq .Sort "common"}}selected{{end}}>Sort: Name</option>
+            <option value="bloom" {{if eq .Sort "bloom"}}selected{{end}}>Sort: Bloom</option>
+            <option value="height" {{if eq .Sort "height"}}selected{{end}}>Sort: Height</option>
+            <option value="price" {{if eq .Sort "price"}}selected{{end}}>Sort: Price</option>
+            <option value="section" {{if eq .Sort "section"}}selected{{end}}>Sort: Group</option>
+          </select>
+        </div>
+
+        <a
+          href="/plants"
+          class="bg-elderberry text-white border-none rounded-2xl px-[18px] py-3 font-black cursor-pointer no-underline flex items-center"
+        >Clear</a>
+
+      </div>
+    </form>
+
+    <!-- Plant list target -->
+    <div id="plant-list" class="mt-[18px]">
+      {{template "plant_list" .}}
+
+    </div>
+
+    <p class="mt-3 mx-0.5 text-[#7e7880] text-[0.82rem] text-center max-md:text-[0.78rem] max-md:mt-2.5">
+      Tap any plant name or details button to open photos and more info.
+    </p>
+
+  </main>
+
+  {{template "plant_drawer" .}}
+  {{template "toast" .}}
+{{end}}

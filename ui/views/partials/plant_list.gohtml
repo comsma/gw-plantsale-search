@@ -1,0 +1,89 @@
+{{define "plant_list"}}
+{{if not .Plants}}
+<div class="p-7 text-center text-[#837d83] bg-white rounded-[20px] border border-dashed border-line">
+  No plants matched those filters. Try clearing one or two filters.
+</div>
+{{else}}
+
+<!-- Desktop table -->
+<div class="overflow-auto bg-white border border-elderberry/[0.08] rounded-[22px] shadow-md max-md:hidden">
+  <table class="w-full border-collapse min-w-[860px]">
+    <thead class="bg-elderberry text-white">
+      <tr>
+        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Name</th>
+        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Bloom Color</th>
+        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Bloom Time</th>
+        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Height</th>
+        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Sun</th>
+        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Soil</th>
+        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Group</th>
+        <th class="text-left px-3 py-3.5 text-[0.74rem] uppercase tracking-[0.06em] whitespace-nowrap">Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Plants}}
+      <tr class="border-b border-line hover:bg-[#faf8f6] even:bg-[#fdfcfc]">
+        <td class="px-3 py-2.5">
+          <button
+            class="name-cell text-left"
+            hx-get="/plants/{{.Taxon}}"
+            hx-target="#drawer-content"
+            hx-swap="innerHTML"
+            hx-on::after-request="window.dispatchEvent(new Event('open-drawer'))"
+            type="button"
+          >
+            <span class="block font-black text-elderberry">{{.Common}}</span>
+            <span class="sci">{{.Scientific}}</span>
+          </button>
+        </td>
+        <td class="px-3 py-2.5 text-[0.88rem]">{{.Color}}</td>
+        <td class="px-3 py-2.5 text-[0.88rem]">{{.Bloom}}</td>
+        <td class="px-3 py-2.5 text-[0.88rem]">{{.Height}}</td>
+        <td class="px-3 py-2.5 text-[0.88rem]">{{.Sun}}</td>
+        <td class="px-3 py-2.5 text-[0.88rem]">{{.Soil}}</td>
+        <td class="px-3 py-2.5 text-[0.88rem]">{{.Section}}</td>
+        <td class="px-3 py-2.5 text-[0.88rem]">{{.Price}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+
+<!-- Mobile cards -->
+<div class="hidden max-md:grid gap-2.5">
+  {{range .Plants}}
+  <div class="mobile-plant bg-white border border-elderberry/8 rounded-[20px] shadow-sm p-4">
+    <button
+      class="text-left w-full"
+      hx-get="/plants/{{.Taxon}}"
+      hx-target="#drawer-content"
+      hx-swap="innerHTML"
+      hx-on::after-request="window.dispatchEvent(new Event('open-drawer'))"
+      type="button"
+    >
+      <span class="block font-black text-elderberry text-[1rem]">{{.Common}}</span>
+      <span class="block italic text-[#8a858b] text-[0.82rem] mb-2">{{.Scientific}}</span>
+    </button>
+    <div class="mobile-tags">
+      <span>{{.Sun}}</span>
+      <span>{{.Soil}}</span>
+      <span>{{.Bloom}}</span>
+      <span>{{.Height}}</span>
+      <span>{{.Price}}</span>
+    </div>
+    <div class="mobile-actions">
+      <button
+        class="text-stem font-black text-[0.82rem]"
+        hx-get="/plants/{{.Taxon}}"
+        hx-target="#drawer-content"
+        hx-swap="innerHTML"
+        hx-on::after-request="window.dispatchEvent(new Event('open-drawer'))"
+        type="button"
+      >Details →</button>
+    </div>
+  </div>
+  {{end}}
+</div>
+
+{{end}}
+{{end}}

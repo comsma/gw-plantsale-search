@@ -1,0 +1,119 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@source "../../../ui/views/**/*.gohtml";
+
+@theme {
+  --color-elderberry: #3E2148;
+  --color-stem: #35723F;
+  --color-prickly: #8CA45D;
+  --color-dragonfly: #F3F1EF;
+  --color-monarch: #DC582A;
+  --color-goldenrod: #F1BE48;
+  --color-chickadee: #414042;
+  --color-line: #dfd9d4;
+  --color-soft: #ebe6e2;
+
+  --font-kalam: "Kalam", cursive;
+  --font-lato: "Lato", sans-serif;
+  --font-lora: "Lora", serif;
+}
+
+/* ── Splash gradient ─────────────────────────────────────────────── */
+.splash-bg {
+  background: radial-gradient(circle at top left, rgba(140, 164, 93, 0.22), transparent 30%),
+    linear-gradient(145deg, #4c2859 0%, #3e2148 45%, #2f6a39 100%);
+}
+
+/* ── Wizard step visibility & animation ─────────────────────────── */
+.step {
+  display: none;
+  width: 100%;
+  animation: fadeUp 0.35s ease;
+}
+.step.visible {
+  display: block;
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Progress dot states ─────────────────────────────────────────── */
+.dot {
+  @apply w-3 h-3 rounded-full transition-all duration-[250ms] bg-white/30;
+}
+.dot.active {
+  background-color: #dc582a;
+}
+.dot.done {
+  background-color: #8ca45d;
+}
+
+/* ── Option card selected state ──────────────────────────────────── */
+.option-card.selected {
+  border-color: #35723f;
+  background: #f2f7ef;
+}
+
+/* ── Modal / panel open state ────────────────────────────────────── */
+body.modal-open {
+  overflow: hidden;
+}
+#plant-drawer,
+#fav-panel {
+  display: none;
+}
+#plant-drawer.open,
+#fav-panel.open {
+  display: block;
+}
+
+/* ── Toast show state ────────────────────────────────────────────── */
+.toast-msg {
+  @apply fixed left-1/2 bottom-20 z-[900] -translate-x-1/2 translate-y-2.5 bg-stem text-white px-4 py-2.5 rounded-full font-black opacity-0 pointer-events-none transition-all duration-[250ms];
+}
+.toast-msg.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Save button saved state ─────────────────────────────────────── */
+.pd-fav-btn.saved {
+  background-color: #35723f;
+}
+
+/* ── Classes used in JS-generated HTML (table rows + mobile cards) ─ */
+.name-cell {
+  @apply font-black text-elderberry cursor-pointer min-w-[220px];
+}
+.name-cell .sci {
+  @apply block italic font-normal text-[#8c8790] text-[0.78rem] mt-0.5;
+}
+.heart-btn {
+  @apply bg-transparent border-none text-xl cursor-pointer text-elderberry px-2 py-1;
+}
+.mobile-plant {
+  @apply bg-white border border-elderberry/10 rounded-[18px] p-3 shadow-md;
+}
+.mobile-plant h3 {
+  @apply m-0 text-elderberry text-base leading-snug;
+}
+.mobile-plant .sci {
+  @apply italic text-[#8b868d] mt-0.5 text-[0.78rem];
+}
+.mobile-tags {
+  @apply flex flex-wrap gap-1.5 my-2.5;
+}
+.mobile-tags span {
+  @apply inline-flex items-center px-2 py-1 rounded-full bg-[#f3efeb] text-elderberry text-[0.7rem] font-bold;
+}
+.mobile-actions {
+  @apply flex gap-2 flex-wrap;
+}

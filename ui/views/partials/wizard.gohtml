@@ -1,0 +1,131 @@
+{{define "wizard"}}
+<section
+  class="max-w-3xl mx-auto min-h-[calc(100vh-110px)] flex items-center justify-center px-[18px] pt-[26px] pb-[34px] max-md:px-3.5 max-md:pt-4 max-md:pb-7"
+>
+
+  <!-- Step 0: Sun -->
+  <div x-show="step === 0" class="w-full">
+    <div class="bg-white/92 border border-elderberry/8 rounded-[30px] p-[30px_24px] shadow-[0_10px_30px_rgba(62,33,72,.12)] max-md:p-[24px_16px]">
+      <h2 class="font-kalam text-elderberry text-[clamp(1.5rem,4vw,2rem)] text-center m-0 mb-2.5">
+        ☀️ How much sun does your spot get?
+      </h2>
+      <p class="text-center text-[#6f6a70] max-w-[44ch] mx-auto leading-[1.7] m-0 mb-[22px]">
+        Start with light. That gets us much closer to the right plant list.
+      </p>
+
+      <div class="grid grid-cols-2 gap-3.5 max-md:grid-cols-1">
+        <template x-for="opt in [{val:'Full Sun',emoji:'🌞',desc:'6+ hours of direct light'},{val:'Part Sun to Shade',emoji:'⛅',desc:'Mixed light or dappled shade'},{val:'Shade',emoji:'🌳',desc:'Woodland or low-light spots'},{val:'Any',emoji:'🤷',desc:'Show adaptable choices too'}]" :key="opt.val">
+          <button
+            class="option-card bg-white border-2 rounded-[22px] p-[18px_14px] text-center cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+            :class="sun === opt.val ? 'border-stem shadow-md -translate-y-0.5' : 'border-soft'"
+            @click="sun = opt.val"
+            type="button"
+          >
+            <span class="block text-[2rem] mb-2" x-text="opt.emoji"></span>
+            <span class="block font-black text-elderberry text-[0.98rem]" x-text="opt.val === 'Any' ? 'Not Sure' : opt.val"></span>
+            <span class="block mt-1.5 text-[#7b767b] text-[0.82rem] leading-[1.45]" x-text="opt.desc"></span>
+          </button>
+        </template>
+      </div>
+
+      <div class="flex justify-center gap-3 flex-wrap mt-6">
+        <button
+          class="border-none rounded-full px-6 py-3 font-black cursor-pointer transition-all duration-200 hover:opacity-90 hover:-translate-y-px bg-stem text-white"
+          :disabled="!sun"
+          :class="!sun ? 'opacity-40 cursor-not-allowed' : ''"
+          @click="step = 1"
+          type="button"
+        >Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 1: Soil -->
+  <div x-show="step === 1" class="w-full">
+    <div class="bg-white/92 border border-elderberry/8 rounded-[30px] p-[30px_24px] shadow-[0_10px_30px_rgba(62,33,72,.12)] max-md:p-[24px_16px]">
+      <h2 class="font-kalam text-elderberry text-[clamp(1.5rem,4vw,2rem)] text-center m-0 mb-2.5">
+        💧 What is your soil like?
+      </h2>
+      <p class="text-center text-[#6f6a70] max-w-[44ch] mx-auto leading-[1.7] m-0 mb-[22px]">
+        Moisture matters. Pick the one that feels closest.
+      </p>
+
+      <div class="grid grid-cols-2 gap-3.5 max-md:grid-cols-1">
+        <template x-for="opt in [{val:'Dry',emoji:'🏜️',desc:'Sandy, lean, or fast-draining'},{val:'Medium',emoji:'🌱',desc:'Average garden moisture'},{val:'Wet',emoji:'🌊',desc:'Low, damp, or boggy'},{val:'Any',emoji:'🤷',desc:'Show broader options'}]" :key="opt.val">
+          <button
+            class="option-card bg-white border-2 rounded-[22px] p-[18px_14px] text-center cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+            :class="soil === opt.val ? 'border-stem shadow-md -translate-y-0.5' : 'border-soft'"
+            @click="soil = opt.val"
+            type="button"
+          >
+            <span class="block text-[2rem] mb-2" x-text="opt.emoji"></span>
+            <span class="block font-black text-elderberry text-[0.98rem]" x-text="opt.val === 'Any' ? 'Not Sure' : opt.val"></span>
+            <span class="block mt-1.5 text-[#7b767b] text-[0.82rem] leading-[1.45]" x-text="opt.desc"></span>
+          </button>
+        </template>
+      </div>
+
+      <div class="flex justify-center gap-3 flex-wrap mt-6">
+        <button class="border-2 border-elderberry rounded-full px-6 py-3 font-black cursor-pointer transition-all duration-200 hover:opacity-90 hover:-translate-y-px bg-transparent text-elderberry" @click="step = 0" type="button">
+          ← Back
+        </button>
+        <button
+          class="border-none rounded-full px-6 py-3 font-black cursor-pointer transition-all duration-200 hover:opacity-90 hover:-translate-y-px bg-stem text-white"
+          :disabled="!soil"
+          :class="!soil ? 'opacity-40 cursor-not-allowed' : ''"
+          @click="step = 2"
+          type="button"
+        >Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Section -->
+  <div x-show="step === 2" class="w-full">
+    <div class="bg-white/92 border border-elderberry/8 rounded-[30px] p-[30px_24px] shadow-[0_10px_30px_rgba(62,33,72,.12)] max-md:p-[24px_16px]">
+      <h2 class="font-kalam text-elderberry text-[clamp(1.5rem,4vw,2rem)] text-center m-0 mb-2.5">
+        🏡 What best describes your space?
+      </h2>
+      <p class="text-center text-[#6f6a70] max-w-[44ch] mx-auto leading-[1.7] m-0 mb-[22px]">
+        Choose the plant group that feels most like your spot. You can still browse everything after.
+      </p>
+
+      <div class="grid grid-cols-2 gap-3.5 max-md:grid-cols-1">
+        <template x-for="opt in [
+          {val:'Sun / Prairie',emoji:'🌾',desc:'Sunny beds and open gardens'},
+          {val:'Woodland / Shade',emoji:'🌳',desc:'Part shade and woodland edges'},
+          {val:'Grasses',emoji:'🌿',desc:'Ornamental texture and movement'},
+          {val:'Sedges & Rushes',emoji:'🌱',desc:'Useful fillers for many sites'},
+          {val:'Ferns',emoji:'🍃',desc:'Shade-loving foliage stars'},
+          {val:'Trees & Shrubs',emoji:'🌲',desc:'Structure, screening, and habitat'},
+          {val:'Any',emoji:'🤷',desc:'Show broad results',wide:true}
+        ]" :key="opt.val">
+          <button
+            class="option-card bg-white border-2 rounded-[22px] p-[18px_14px] text-center cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+            :class="[section === opt.val ? 'border-stem shadow-md -translate-y-0.5' : 'border-soft', opt.wide ? 'col-span-2 max-md:col-span-1' : '']"
+            @click="section = opt.val"
+            type="button"
+          >
+            <span class="block text-[2rem] mb-2" x-text="opt.emoji"></span>
+            <span class="block font-black text-elderberry text-[0.98rem]" x-text="opt.val === 'Any' ? 'Not Sure' : opt.val"></span>
+            <span class="block mt-1.5 text-[#7b767b] text-[0.82rem] leading-[1.45]" x-text="opt.desc"></span>
+          </button>
+        </template>
+      </div>
+
+      <div class="flex justify-center gap-3 flex-wrap mt-6">
+        <button class="border-2 border-elderberry rounded-full px-6 py-3 font-black cursor-pointer transition-all duration-200 hover:opacity-90 hover:-translate-y-px bg-transparent text-elderberry" @click="step = 1" type="button">
+          ← Back
+        </button>
+        <button
+          class="border-none rounded-full px-6 py-3 font-black cursor-pointer transition-all duration-200 hover:opacity-90 hover:-translate-y-px bg-stem text-white"
+          :disabled="!section"
+          :class="!section ? 'opacity-40 cursor-not-allowed' : ''"
+          @click="submitWizard()"
+          type="button"
+        >See My Plants 🌱</button>
+      </div>
+    </div>
+  </div>
+</section>
+{{end}}
