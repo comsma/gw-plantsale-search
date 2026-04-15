@@ -13,7 +13,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-COPY --from=css-builder /app/ui/static/css ./ui/static/css
+COPY --from=css-builder /app/ui/static/css /app/ui/static/css
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /plantsale-search ./cmd/web
 
 # Stage 3: Runtime — assets are embedded via embed.FS, binary is self-contained

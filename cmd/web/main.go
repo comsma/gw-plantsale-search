@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/fs"
 	"log"
 
 	"github.com/comsma/gw-plantsale-search/ui"
@@ -16,10 +17,15 @@ func main() {
 		panic(err)
 	}
 
+	staticFS, err := fs.Sub(ui.Static, "static")
+	if err != nil {
+		panic(err)
+	}
+
 	e.Renderer = tmpl
 	e.Use(middleware.Gzip())
 	e.Use(middleware.RequestLogger())
-	e.StaticFS("/static", ui.Static)
+	e.StaticFS("/static", staticFS)
 
 	h := &Handler{}
 	e.GET("/", h.Home)
