@@ -18,6 +18,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /plantsale-search ./cm
 
 # Stage 3: Runtime — assets are embedded via embed.FS, binary is self-contained
 FROM scratch
+COPY --from=go-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=go-builder /plantsale-search /plantsale-search
 
 EXPOSE 8080
