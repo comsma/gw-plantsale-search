@@ -5,7 +5,7 @@
   <div>
     <div class="aspect-square rounded-[22px] overflow-hidden bg-gradient-to-br from-prickly/[0.18] to-stem/10 border border-line grid place-items-center">
       {{if .ImageURL}}
-      <img src="{{.ImageURL}}" alt="{{.Plant.Common}}" class="w-full h-full object-cover" />
+      <img src="{{.ImageURL}}" alt="{{.Plant.Common}}" class="w-full h-full object-cover" decoding="async" />
       {{else}}
       <div class="text-[#7b757c] text-center p-4">
         <div class="text-[3rem] mb-2">🌿</div>

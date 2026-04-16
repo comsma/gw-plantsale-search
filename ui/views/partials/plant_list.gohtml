@@ -29,7 +29,7 @@
     <!-- Image -->
     <div class="aspect-[4/3] bg-gradient-to-br from-prickly/[0.15] to-stem/10 overflow-hidden">
       {{if .ImageURL}}
-      <img src="{{.ImageURL}}" alt="{{.Common}}" class="w-full h-full object-cover" />
+      <img src="{{.ImageURL}}" alt="{{.Common}}" class="w-full h-full object-cover" decoding="async" />
       {{else}}
       <div class="w-full h-full grid place-items-center text-[2.5rem] opacity-40">🌿</div>
       {{end}}
