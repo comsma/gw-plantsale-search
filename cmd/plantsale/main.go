@@ -18,6 +18,7 @@ import (
 	_ "github.com/comsma/gw-plantsale-search/internal/migrations"
 	"github.com/comsma/gw-plantsale-search/internal/models"
 	"github.com/comsma/gw-plantsale-search/internal/plants"
+	"github.com/comsma/gw-plantsale-search/internal/search"
 	"github.com/comsma/gw-plantsale-search/internal/server"
 )
 
@@ -85,8 +86,14 @@ func runServe(_ *cli.Context) error {
 		return err
 	}
 	defer db.Close()
-	syncer := indexer.New(models.New(db))
-	return server.Start(db, syncer)
+
+	idx, err := search.New()
+	if err != nil {
+		return fmt.Errorf("search index: %w", err)
+	}
+
+	syncer := indexer.New(models.New(db), idx)
+	return server.Start(db, syncer, idx)
 }
 
 // ── migrate ──────────────────────────────────────────────────────────────────

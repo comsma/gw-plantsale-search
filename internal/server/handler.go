@@ -10,14 +10,18 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/comsma/gw-plantsale-search/internal/indexer"
 	"github.com/comsma/gw-plantsale-search/internal/models"
+	"github.com/comsma/gw-plantsale-search/internal/search"
 	"github.com/labstack/echo/v5"
 )
 
 type Handler struct {
+	session *scs.SessionManager
 	queries *models.Queries
 	syncer  *indexer.Syncer
+	search  *search.Index
 }
 
 // PlantView maps models.Plant to template-compatible field names.
@@ -37,37 +41,21 @@ type PlantView struct {
 	ImageURL   string
 }
 
-func toPlantView(p models.Plant) PlantView {
+func toPlantViewFromDoc(d search.PlantDoc) PlantView {
 	return PlantView{
-		Taxon:      p.ID,
-		Common:     p.Common,
-		Scientific: p.Scientific.String,
-		Section:    p.Section.String,
-		Color:      p.Color.String,
-		Bloom:      p.Bloom.String,
-		Height:     p.Height.String,
-		Sun:        p.Sun.String,
-		Soil:       p.Water.String,
-		Price:      formatPrice(p.Price),
-		InatURL:    inatURL(p.InatrualistTaxonID),
-	}
-}
-
-func toPlantViewFromSearch(r models.SearchPlantsRow) PlantView {
-	return PlantView{
-		Taxon:      r.ID,
-		Common:     r.Common,
-		Scientific: r.Scientific.String,
-		Section:    r.Section.String,
-		Color:      r.Color.String,
-		Bloom:      r.Bloom.String,
-		Height:     r.Height.String,
-		Sun:        r.Sun.String,
-		Soil:       r.Water.String,
-		Price:      formatPrice(r.Price),
-		InatURL:    inatURL(r.InatrualistTaxonID),
-		ImageURL:   r.ImageUrl.String,
-		Available:  r.Available,
+		Taxon:      d.ID,
+		Common:     d.Common,
+		Scientific: d.Scientific,
+		Section:    d.Section,
+		Color:      d.Color,
+		Bloom:      d.Bloom,
+		Height:     d.Height,
+		Sun:        d.Sun,
+		Soil:       d.Water,
+		Price:      formatPrice(d.Price),
+		InatURL:    inatURLStr(d.ID),
+		ImageURL:   d.ImageURL,
+		Available:  true, // only available plants are indexed
 	}
 }
 
@@ -89,8 +77,12 @@ func toPlantViewFromRow(r models.GetPlantWithInatrualistRow) PlantView {
 }
 
 func inatURL(taxonID sql.NullString) string {
-	if taxonID.Valid && taxonID.String != "" {
-		return "https://www.inaturalist.org/taxa/" + taxonID.String
+	return inatURLStr(taxonID.String)
+}
+
+func inatURLStr(taxonID string) string {
+	if taxonID != "" {
+		return "https://www.inaturalist.org/taxa/" + taxonID
 	}
 	return ""
 }
@@ -110,25 +102,6 @@ func unwrapNullStrings(items []sql.NullString) []string {
 		}
 	}
 	return out
-}
-
-func ns(s string) sql.NullString {
-	return sql.NullString{String: s, Valid: true}
-}
-
-// fuzzyQuery converts a user search string into a BOOLEAN MODE expression
-// with prefix wildcards so partial words still match.
-// "purple cone" → "purple* cone*"
-func fuzzyQuery(s string) string {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return ""
-	}
-	words := strings.Fields(s)
-	for i, w := range words {
-		words[i] = w + "*"
-	}
-	return strings.Join(words, " ")
 }
 
 type HomeData struct {
@@ -186,27 +159,22 @@ func (h *Handler) PlantList(c *echo.Context) error {
 		offset = 0
 	}
 
-	fq := fuzzyQuery(query)
-	rows, err := h.queries.SearchPlants(ctx, models.SearchPlantsParams{
-		Query:      fq,
-		Query_2:    fq,
-		Query_3:    fq,
-		Section:    ns(section),
-		Color:      ns(color),
-		Sun:        ns(sun),
-		Water:      ns(water),
-		Query_5:    fq,
-		Query_6:    fq,
-		SortColumn: sort,
+	docs, err := h.search.Search(search.SearchParams{
+		Query:   query,
+		Section: section,
+		Color:   color,
+		Sun:     sun,
+		Water:   water,
+		Sort:    sort,
 	})
 	if err != nil {
-		log.Printf("SearchPlants error: %v", err)
-		rows = nil
+		log.Printf("search error: %v", err)
+		docs = nil
 	}
 
-	all := make([]PlantView, len(rows))
-	for i, p := range rows {
-		all[i] = toPlantViewFromSearch(p)
+	all := make([]PlantView, len(docs))
+	for i, d := range docs {
+		all[i] = toPlantViewFromDoc(d)
 	}
 
 	end := offset + pageSize

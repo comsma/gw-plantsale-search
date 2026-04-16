@@ -1,6 +1,28 @@
 -- name: GetAllPlants :many
 SELECT * FROM plants ORDER BY common;
 
+-- name: GetAllPlantsWithInatrualist :many
+SELECT
+    p.id,
+    p.common,
+    p.scientific,
+    p.inatrualist_taxon_id,
+    p.section,
+    p.color,
+    p.bloom,
+    p.height,
+    p.height_sort,
+    p.sun,
+    p.water,
+    p.price,
+    p.available,
+    i.summary,
+    i.image_url,
+    i.attribution
+FROM plants p
+LEFT JOIN inatrualist i ON i.plant_id = p.id
+ORDER BY p.common;
+
 -- name: SearchPlants :many
 SELECT
     p.id,
@@ -22,8 +44,8 @@ LEFT JOIN inatrualist i ON i.plant_id = p.id
 WHERE p.available = true
   AND (
     sqlc.arg(query) = ''
-    OR MATCH(p.common, p.scientific) AGAINST (sqlc.arg(query) IN BOOLEAN MODE)
-    OR MATCH(i.summary) AGAINST (sqlc.arg(query) IN BOOLEAN MODE)
+    OR MATCH(p.common, p.scientific) AGAINST (sqlc.arg(query) IN NATURAL LANGUAGE MODE)
+    OR MATCH(i.summary) AGAINST (sqlc.arg(query) IN NATURAL LANGUAGE MODE)
   )
   AND (sqlc.arg(section) = '' OR p.section = sqlc.arg(section))
   AND (sqlc.arg(color)   = '' OR p.color   = sqlc.arg(color))
@@ -37,9 +59,9 @@ ORDER BY
         ELSE p.common
     END ASC,
     CASE WHEN sqlc.arg(query) = '' THEN 0 ELSE (
-        (MATCH(p.common, p.scientific) AGAINST (sqlc.arg(query) IN BOOLEAN MODE))+
-        (MATCH(i.summary) AGAINST (sqlc.arg(query) IN BOOLEAN MODE))
-    ) END DESC,
+        (MATCH(p.common, p.scientific) AGAINST (sqlc.arg(query) IN NATURAL LANGUAGE MODE))+
+        (MATCH(i.summary) AGAINST (sqlc.arg(query) IN NATURAL LANGUAGE MODE))
+    ) END ASC,
     p.common ASC;
 
 -- name: GetPlantWithInatrualist :one

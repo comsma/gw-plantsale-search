@@ -118,6 +118,88 @@ func (q *Queries) GetAllPlants(ctx context.Context) ([]Plant, error) {
 	return items, nil
 }
 
+const getAllPlantsWithInatrualist = `-- name: GetAllPlantsWithInatrualist :many
+SELECT
+    p.id,
+    p.common,
+    p.scientific,
+    p.inatrualist_taxon_id,
+    p.section,
+    p.color,
+    p.bloom,
+    p.height,
+    p.height_sort,
+    p.sun,
+    p.water,
+    p.price,
+    p.available,
+    i.summary,
+    i.image_url,
+    i.attribution
+FROM plants p
+LEFT JOIN inatrualist i ON i.plant_id = p.id
+ORDER BY p.common
+`
+
+type GetAllPlantsWithInatrualistRow struct {
+	ID                 string         `json:"id"`
+	Common             string         `json:"common"`
+	Scientific         sql.NullString `json:"scientific"`
+	InatrualistTaxonID sql.NullString `json:"inatrualist_taxon_id"`
+	Section            sql.NullString `json:"section"`
+	Color              sql.NullString `json:"color"`
+	Bloom              sql.NullString `json:"bloom"`
+	Height             sql.NullString `json:"height"`
+	HeightSort         sql.NullString `json:"height_sort"`
+	Sun                sql.NullString `json:"sun"`
+	Water              sql.NullString `json:"water"`
+	Price              string         `json:"price"`
+	Available          bool           `json:"available"`
+	Summary            sql.NullString `json:"summary"`
+	ImageUrl           sql.NullString `json:"image_url"`
+	Attribution        sql.NullString `json:"attribution"`
+}
+
+func (q *Queries) GetAllPlantsWithInatrualist(ctx context.Context) ([]GetAllPlantsWithInatrualistRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllPlantsWithInatrualist)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllPlantsWithInatrualistRow
+	for rows.Next() {
+		var i GetAllPlantsWithInatrualistRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Common,
+			&i.Scientific,
+			&i.InatrualistTaxonID,
+			&i.Section,
+			&i.Color,
+			&i.Bloom,
+			&i.Height,
+			&i.HeightSort,
+			&i.Sun,
+			&i.Water,
+			&i.Price,
+			&i.Available,
+			&i.Summary,
+			&i.ImageUrl,
+			&i.Attribution,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getDistinctSections = `-- name: GetDistinctSections :many
 SELECT DISTINCT section FROM plants
 WHERE section IS NOT NULL AND section != '' AND available = true
@@ -293,8 +375,8 @@ LEFT JOIN inatrualist i ON i.plant_id = p.id
 WHERE p.available = true
   AND (
     ? = ''
-    OR MATCH(p.common, p.scientific) AGAINST (? IN BOOLEAN MODE)
-    OR MATCH(i.summary) AGAINST (? IN BOOLEAN MODE)
+    OR MATCH(p.common, p.scientific) AGAINST (? IN NATURAL LANGUAGE MODE)
+    OR MATCH(i.summary) AGAINST (? IN NATURAL LANGUAGE MODE)
   )
   AND (? = '' OR p.section = ?)
   AND (?   = '' OR p.color   = ?)
@@ -308,9 +390,9 @@ ORDER BY
         ELSE p.common
     END ASC,
     CASE WHEN ? = '' THEN 0 ELSE (
-        (MATCH(p.common, p.scientific) AGAINST (? IN BOOLEAN MODE))+
-        (MATCH(i.summary) AGAINST (? IN BOOLEAN MODE))
-    ) END DESC,
+        (MATCH(p.common, p.scientific) AGAINST (? IN NATURAL LANGUAGE MODE))+
+        (MATCH(i.summary) AGAINST (? IN NATURAL LANGUAGE MODE))
+    ) END ASC,
     p.common ASC
 `
 
