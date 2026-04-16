@@ -14,12 +14,11 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/comsma/gw-plantsale-search/internal/inatrualist"
+	_ "github.com/comsma/gw-plantsale-search/internal/migrations"
 	"github.com/comsma/gw-plantsale-search/internal/models"
 	"github.com/comsma/gw-plantsale-search/internal/plants"
 	"github.com/comsma/gw-plantsale-search/internal/server"
 )
-
-const migrationsDir = "./migrations"
 
 func main() {
 	app := &cli.App{
@@ -38,14 +37,20 @@ func main() {
 					{Name: "up", Usage: "apply all pending migrations", Action: runMigrateUp},
 					{Name: "down", Usage: "roll back the last migration", Action: runMigrateDown},
 					{Name: "status", Usage: "print migration status", Action: runMigrateStatus},
-					{Name: "create", Usage: "create a new migration file", ArgsUsage: "<name>", Action: runMigrateCreate},
 				},
 			},
 			{
 				Name:  "ingest",
 				Usage: "data ingestion tools",
 				Subcommands: []*cli.Command{
-					{Name: "plants", Usage: "ingest plants from JSON and fetch iNaturalist data", Action: ingestPlants},
+					{Name: "plants", Usage: "ingest plants from JSON and fetch iNaturalist data", Action: ingestPlants, Flags: []cli.Flag{
+						&cli.StringFlag{
+							Name:    "plant-list",
+							Aliases: []string{"pl"},
+							Value:   "plants.json",
+							Usage:   "Location of plant list",
+						},
+					}},
 					{Name: "refresh-inat", Usage: "re-fetch iNaturalist data for all plants in the database", Action: refreshInat},
 				},
 			},
@@ -92,7 +97,7 @@ func runMigrateUp(_ *cli.Context) error {
 	}
 	defer db.Close()
 	goose.SetDialect("mysql")
-	return goose.Up(db, migrationsDir)
+	return goose.Up(db, ".")
 }
 
 func runMigrateDown(_ *cli.Context) error {
@@ -102,7 +107,7 @@ func runMigrateDown(_ *cli.Context) error {
 	}
 	defer db.Close()
 	goose.SetDialect("mysql")
-	return goose.Down(db, migrationsDir)
+	return goose.Down(db, ".")
 }
 
 func runMigrateStatus(_ *cli.Context) error {
@@ -112,20 +117,13 @@ func runMigrateStatus(_ *cli.Context) error {
 	}
 	defer db.Close()
 	goose.SetDialect("mysql")
-	return goose.Status(db, migrationsDir)
-}
-
-func runMigrateCreate(c *cli.Context) error {
-	name := c.Args().First()
-	if name == "" {
-		return fmt.Errorf("migration name required")
-	}
-	return goose.Create(nil, migrationsDir, name, "sql")
+	return goose.Status(db, ".")
 }
 
 // ── ingest ───────────────────────────────────────────────────────────────────
 
-func ingestPlants(_ *cli.Context) error {
+func ingestPlants(cliCtx *cli.Context) error {
+
 	db, err := openDB()
 	if err != nil {
 		return err
@@ -136,7 +134,12 @@ func ingestPlants(_ *cli.Context) error {
 	ctx := context.Background()
 	var created, skipped, inatOk, inatFail int
 
-	for _, plant := range plants.All {
+	plantList, err := plants.LoadPlants(cliCtx.String("plant-list"))
+	if err != nil {
+		return fmt.Errorf("failed to load plants: %w", err)
+	}
+
+	for _, plant := range plantList {
 		id := strconv.Itoa(plant.Taxon)
 
 		err := q.CreatePlant(ctx, models.CreatePlantParams{

@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: plantsale-db-pvc
+  name: gwplantsale-db-pvc
 spec:
   accessModes:
     - ReadWriteOnce
@@ -16,16 +16,19 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: plantsale-db
+  name: gwplantsale-db
+  annotations:
+    v1.podman.io/networks: web
 spec:
+  restartPolicy: Always
   containers:
     - name: mariadb
-      image: docker.io/library/mariadb:11.3
+      image: docker.io/library/mariadb:12
       env:
         - name: MARIADB_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: plantsale-db-secret
+              name: gwplantsale-db-secret
               key: root-password
       volumeMounts:
         - name: db-data
@@ -35,7 +38,7 @@ spec:
   volumes:
     - name: db-data
       persistentVolumeClaim:
-        claimName: plantsale-db-pvc
+        claimName: gwplantsale-db-pvc
 
 ---
 
@@ -47,19 +50,24 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: plantsale-app
+  name: gwplantsale-pod
+  labels:
+    app: gwplantsale
+  annotations:
+    v1.podman.io/networks: web
 spec:
+  restartPolicy: Always
   initContainers:
     - name: db-init
-      image: docker.io/library/mariadb:11.3
+      image: docker.io/library/mariadb:12
       command:
         - sh
         - -c
         - |
-          until MYSQL_PWD="$ROOT_PASSWORD" mysqladmin ping -h plantsale-db -u root --silent 2>/dev/null; do
+          until MYSQL_PWD="$ROOT_PASSWORD" mysqladmin ping -h gwplantsale-db -u root --silent 2>/dev/null; do
             echo "waiting for database..."; sleep 2
           done
-          MYSQL_PWD="$ROOT_PASSWORD" mysql -h plantsale-db -u root \
+          MYSQL_PWD="$ROOT_PASSWORD" mysql -h gwplantsale-db -u root \
             -e "CREATE DATABASE IF NOT EXISTS plantsale_search;" \
             -e "CREATE USER IF NOT EXISTS 'plantsale_user'@'%' IDENTIFIED BY '$USER_PASSWORD';" \
             -e "GRANT ALL PRIVILEGES ON plantsale_search.* TO 'plantsale_user'@'%';" \
@@ -68,37 +76,36 @@ spec:
         - name: ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: plantsale-db-secret
+              name: gwplantsale-db-secret
               key: root-password
         - name: USER_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: plantsale-db-secret
+              name: gwplantsale-db-secret
               key: user-password
 
     - name: migrate
-      image: localhost/plantsale:latest
+      image: ghcr.io/comsma/gw-plantsale-search:v0.1.6
       args: ["migrate", "up"]
       env:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: plantsale-db-secret
+              name: gwplantsale-db-secret
               key: database-url
 
   containers:
-    - name: web
-      image: localhost/plantsale:latest
+    - name: app
+      image: ghcr.io/comsma/gw-plantsale-search:v0.1.6
       args: ["serve"]
       env:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: plantsale-db-secret
+              name: gwplantsale-db-secret
               key: database-url
       ports:
         - containerPort: 8080
-          hostPort: 8080
       readinessProbe:
         httpGet:
           path: /

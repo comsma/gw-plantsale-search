@@ -27,7 +27,7 @@ sqlc/generate:
 
 ## ingest/plants: ingest plants from JSON and fetch iNaturalist data
 ingest/plants:
-	DATABASE_URL="$(DATABASE_URL)" go run ./cmd/plantsale ingest plants
+	DATABASE_URL="$(DATABASE_URL)" go run ./cmd/plantsale ingest plants --plant-list=plant_sale_list.json
 
 ## ingest/refresh-inat: re-fetch iNaturalist data for all plants in the database
 ingest/refresh-inat:
