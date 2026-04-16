@@ -72,6 +72,7 @@ func GetPlantDetails(taxon int) (*Plant, error) {
 			TaxonPhotos   []struct {
 				Photo struct {
 					SmallUrl    string `json:"small_url"`
+					MediumUrl   string `json:"medium_url"`
 					Attribution string `json:"attribution"`
 				}
 			} `json:"taxon_photos"`
@@ -91,7 +92,7 @@ func GetPlantDetails(taxon int) (*Plant, error) {
 
 	var imageURL, imageAttribution string
 	if len(r.TaxonPhotos) > 0 {
-		imageURL = r.TaxonPhotos[0].Photo.SmallUrl
+		imageURL = r.TaxonPhotos[0].Photo.MediumUrl
 		imageAttribution = r.TaxonPhotos[0].Photo.Attribution
 	}
 
