@@ -14,6 +14,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/comsma/gw-plantsale-search/internal/inatrualist"
+	"github.com/comsma/gw-plantsale-search/internal/indexer"
 	_ "github.com/comsma/gw-plantsale-search/internal/migrations"
 	"github.com/comsma/gw-plantsale-search/internal/models"
 	"github.com/comsma/gw-plantsale-search/internal/plants"
@@ -51,7 +52,6 @@ func main() {
 							Usage:   "Location of plant list",
 						},
 					}},
-					{Name: "refresh-inat", Usage: "re-fetch iNaturalist data for all plants in the database", Action: refreshInat},
 				},
 			},
 		},
@@ -85,7 +85,8 @@ func runServe(_ *cli.Context) error {
 		return err
 	}
 	defer db.Close()
-	return server.Start(db)
+	syncer := indexer.New(models.New(db))
+	return server.Start(db, syncer)
 }
 
 // ── migrate ──────────────────────────────────────────────────────────────────
@@ -166,70 +167,27 @@ func ingestPlants(cliCtx *cli.Context) error {
 		}
 		created++
 
-		if ok := fetchAndUpsertInat(ctx, q, id, plant.Taxon, plant.Common); ok {
-			inatOk++
-		} else {
+		details, err := inatrualist.GetPlantDetails(plant.Taxon)
+		if err != nil {
+			log.Printf("inat failed for %q (taxon %d): %v", plant.Common, plant.Taxon, err)
 			inatFail++
+			continue
 		}
+		if err := q.UpsertInatrualistData(ctx, models.UpsertInatrualistDataParams{
+			PlantID:     id,
+			Summary:     details.Summary,
+			ImageUrl:    details.ImageUrl,
+			Attribution: details.ImageAttribution,
+		}); err != nil {
+			log.Printf("upsert inat failed for %q: %v", plant.Common, err)
+			inatFail++
+			continue
+		}
+		inatOk++
 	}
 
 	fmt.Printf("done: %d created, %d skipped, %d inat ok, %d inat failed\n", created, skipped, inatOk, inatFail)
 	return nil
-}
-
-func refreshInat(_ *cli.Context) error {
-	db, err := openDB()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	q := models.New(db)
-	ctx := context.Background()
-
-	allPlants, err := q.GetAllPlants(ctx)
-	if err != nil {
-		return fmt.Errorf("get plants: %w", err)
-	}
-
-	var ok, failed int
-	for _, p := range allPlants {
-		if !p.InatrualistTaxonID.Valid || p.InatrualistTaxonID.String == "" {
-			log.Printf("skipping %q: no taxon ID", p.Common)
-			continue
-		}
-		taxon, err := strconv.Atoi(p.InatrualistTaxonID.String)
-		if err != nil {
-			log.Printf("skipping %q: invalid taxon ID %q", p.Common, p.InatrualistTaxonID.String)
-			continue
-		}
-		if fetchAndUpsertInat(ctx, q, p.ID, taxon, p.Common) {
-			ok++
-		} else {
-			failed++
-		}
-	}
-
-	fmt.Printf("done: %d inat ok, %d failed\n", ok, failed)
-	return nil
-}
-
-func fetchAndUpsertInat(ctx context.Context, q *models.Queries, id string, taxon int, common string) bool {
-	details, err := inatrualist.GetPlantDetails(taxon)
-	if err != nil {
-		log.Printf("inat failed for %q (taxon %d): %v", common, taxon, err)
-		return false
-	}
-	if err := q.UpsertInatrualistData(ctx, models.UpsertInatrualistDataParams{
-		PlantID:     id,
-		Summary:     details.Summary,
-		ImageUrl:    details.ImageUrl,
-		Attribution: details.ImageAttribution,
-	}); err != nil {
-		log.Printf("upsert inat failed for %q: %v", common, err)
-		return false
-	}
-	return true
 }
 
 func parsePrice(s string) string {

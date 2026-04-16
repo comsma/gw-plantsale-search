@@ -10,12 +10,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/comsma/gw-plantsale-search/internal/indexer"
 	"github.com/comsma/gw-plantsale-search/internal/models"
 	"github.com/labstack/echo/v5"
 )
 
 type Handler struct {
 	queries *models.Queries
+	syncer  *indexer.Syncer
 }
 
 // PlantView maps models.Plant to template-compatible field names.
@@ -262,6 +264,11 @@ func (h *Handler) PlantList(c *echo.Context) error {
 		return c.Render(http.StatusOK, "partials/plant_list.gohtml", data)
 	}
 	return c.Render(http.StatusOK, "pages/results.gohtml", data)
+}
+
+func (h *Handler) TriggerInatResync(c *echo.Context) error {
+	h.syncer.Trigger()
+	return c.String(http.StatusAccepted, "resync started")
 }
 
 func (h *Handler) PlantDetail(c *echo.Context) error {

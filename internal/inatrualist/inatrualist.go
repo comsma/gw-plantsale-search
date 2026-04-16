@@ -27,7 +27,7 @@ type Plant struct {
 var htmlTagRe = regexp.MustCompile(`<[^>]+>`)
 
 // limiter enforces the iNaturalist API limit of 60 requests/minute.
-var limiter = rate.NewLimiter(rate.Every(time.Second), 1)
+var limiter = rate.NewLimiter(rate.Every(2*time.Second), 1)
 
 var client = func() *http.Client {
 	transport := &http.Transport{
