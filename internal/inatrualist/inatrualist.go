@@ -52,7 +52,7 @@ func GetPlantDetails(taxon int) (*Plant, error) {
 		return nil, fmt.Errorf("rate limiter: %w", err)
 	}
 
-	url := fmt.Sprintf("https://api.inaturalist.org/v2/taxa/%d?fields=name,wikipedia_summary,taxon_photos.photo.attribution,taxon_photos.photo.small_url", taxon)
+	url := fmt.Sprintf("https://api.inaturalist.org/v2/taxa/%d?fields=name,wikipedia_summary,taxon_photos.photo.attribution,taxon_photos.photo.small_url,taxon_photos.photo.medium_url", taxon)
 
 	resp, err := client.Get(url)
 	if err != nil {
