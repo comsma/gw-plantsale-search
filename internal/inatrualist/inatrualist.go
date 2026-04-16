@@ -26,8 +26,8 @@ type Plant struct {
 
 var htmlTagRe = regexp.MustCompile(`<[^>]+>`)
 
-// limiter enforces the iNaturalist API limit of 60 requests/minute.
-var limiter = rate.NewLimiter(rate.Every(2*time.Second), 1)
+// limiter enforces the iNaturalist API limit of 30 requests/minute.
+var limiter = rate.NewLimiter(rate.Every(2000*time.Millisecond), 1)
 
 var client = func() *http.Client {
 	transport := &http.Transport{
@@ -52,7 +52,7 @@ func GetPlantDetails(taxon int) (*Plant, error) {
 		return nil, fmt.Errorf("rate limiter: %w", err)
 	}
 
-	url := fmt.Sprintf("https://api.inaturalist.org/v1/taxa/%d", taxon)
+	url := fmt.Sprintf("https://api.inaturalist.org/v2/taxa/%d?fields=name,wikipedia_summary,taxon_photos.photo.attribution,taxon_photos.photo.small_url", taxon)
 
 	resp, err := client.Get(url)
 	if err != nil {
@@ -69,10 +69,12 @@ func GetPlantDetails(taxon int) (*Plant, error) {
 			Name          string `json:"name"`
 			PreferredName string `json:"preferred_common_name"`
 			Summary       string `json:"wikipedia_summary"`
-			DefaultPhoto  struct {
-				MediumURL   string `json:"medium_url"`
-				Attribution string `json:"attribution"`
-			} `json:"default_photo"`
+			TaxonPhotos   []struct {
+				Photo struct {
+					SmallUrl    string `json:"small_url"`
+					Attribution string `json:"attribution"`
+				}
+			} `json:"taxon_photos"`
 		} `json:"results"`
 	}
 
@@ -87,11 +89,17 @@ func GetPlantDetails(taxon int) (*Plant, error) {
 	r := payload.Results[0]
 	summary := strings.TrimSpace(htmlTagRe.ReplaceAllString(r.Summary, ""))
 
+	var imageURL, imageAttribution string
+	if len(r.TaxonPhotos) > 0 {
+		imageURL = r.TaxonPhotos[0].Photo.SmallUrl
+		imageAttribution = r.TaxonPhotos[0].Photo.Attribution
+	}
+
 	return &Plant{
 		ScientificName:   r.Name,
 		CommonName:       r.PreferredName,
 		Summary:          summary,
-		ImageUrl:         r.DefaultPhoto.MediumURL,
-		ImageAttribution: r.DefaultPhoto.Attribution,
+		ImageUrl:         imageURL,
+		ImageAttribution: imageAttribution,
 	}, nil
 }

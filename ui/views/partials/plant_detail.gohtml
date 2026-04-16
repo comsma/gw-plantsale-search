@@ -1,71 +1,130 @@
-{{define "plant_detail"}}
-<div class="grid grid-cols-[310px_1fr] gap-[22px] max-lg:grid-cols-1 max-md:grid-cols-1">
-
-  <!-- Photo column -->
-  <div>
-    <div class="aspect-square rounded-[22px] overflow-hidden bg-gradient-to-br from-prickly/[0.18] to-stem/10 border border-line grid place-items-center">
-      {{if .ImageURL}}
-      <img src="{{.ImageURL}}" alt="{{.Plant.Common}}" class="w-full h-full object-cover" decoding="async" />
-      {{else}}
-      <div class="text-[#7b757c] text-center p-4">
-        <div class="text-[3rem] mb-2">🌿</div>
-        <div class="text-[0.88rem]">No photo available</div>
+{{ define "plant_detail" }}
+  <div
+    class="grid grid-cols-[310px_1fr] gap-[22px] max-lg:grid-cols-1 max-md:grid-cols-1"
+  >
+    <!-- Photo column -->
+    <div>
+      <div
+        class="aspect-square rounded-[22px] overflow-hidden bg-gradient-to-br from-prickly/[0.18] to-stem/10 border border-line grid place-items-center"
+      >
+        {{ if .ImageURL }}
+          <img
+            src="{{ .ImageURL }}"
+            alt="{{ .Plant.Common }}"
+            class="w-full h-full object-cover"
+            decoding="async"
+          />
+        {{ else }}
+          <div class="text-[#7b757c] text-center p-4">
+            <div class="text-[3rem] mb-2">🌿</div>
+            <div class="text-[0.88rem]">No photo available</div>
+          </div>
+        {{ end }}
       </div>
-      {{end}}
+      {{ if .ImageAttribution }}
+        <p class="text-[0.74rem] text-[#918a92] mt-3">
+          {{ .ImageAttribution }}
+        </p>
+      {{ end }}
     </div>
-    {{if .ImageAttribution}}
-    <p class="text-[0.74rem] text-[#918a92] mt-3">{{.ImageAttribution}}</p>
-    {{end}}
+
+    <!-- Detail column -->
+    <div>
+      <h3
+        class="font-kalam text-elderberry text-[2rem] leading-[1.1] m-0 max-md:text-[1.7rem]"
+      >
+        {{ .Plant.Common }}
+      </h3>
+      <p class="italic text-[#8a858b] mt-1.5 mb-0">{{ .Plant.Scientific }}</p>
+
+      <div class="flex flex-wrap gap-1.5 my-2.5">
+        <span
+          class="bg-[#f0ede8] text-chickadee rounded-full px-3 py-1 text-[0.8rem]"
+          >{{ .Plant.Section }}</span
+        >
+        {{ if .Plant.Color }}
+          <span
+            class="bg-[#f0ede8] text-chickadee rounded-full px-3 py-1 text-[0.8rem]"
+            >{{ .Plant.Color }}</span
+          >
+        {{ end }}
+      </div>
+
+      <div
+        class="grid grid-cols-3 gap-2.5 my-4 max-lg:grid-cols-2 max-md:grid-cols-1"
+      >
+        <div class="bg-[#faf8f6] rounded-[14px] p-3 border border-line">
+          <div
+            class="text-[0.72rem] uppercase tracking-wide text-[#918a92] mb-1"
+          >
+            Bloom
+          </div>
+          <div class="font-black text-chickadee text-[0.9rem]">
+            {{ .Plant.Bloom }}
+          </div>
+        </div>
+        <div class="bg-[#faf8f6] rounded-[14px] p-3 border border-line">
+          <div
+            class="text-[0.72rem] uppercase tracking-wide text-[#918a92] mb-1"
+          >
+            Height
+          </div>
+          <div class="font-black text-chickadee text-[0.9rem]">
+            {{ .Plant.Height }}
+          </div>
+        </div>
+        <div class="bg-[#faf8f6] rounded-[14px] p-3 border border-line">
+          <div
+            class="text-[0.72rem] uppercase tracking-wide text-[#918a92] mb-1"
+          >
+            Sun
+          </div>
+          <div class="font-black text-chickadee text-[0.9rem]">
+            {{ .Plant.Sun }}
+          </div>
+        </div>
+        <div class="bg-[#faf8f6] rounded-[14px] p-3 border border-line">
+          <div
+            class="text-[0.72rem] uppercase tracking-wide text-[#918a92] mb-1"
+          >
+            Soil
+          </div>
+          <div class="font-black text-chickadee text-[0.9rem]">
+            {{ .Plant.Soil }}
+          </div>
+        </div>
+        <div class="bg-[#faf8f6] rounded-[14px] p-3 border border-line">
+          <div
+            class="text-[0.72rem] uppercase tracking-wide text-[#918a92] mb-1"
+          >
+            Price
+          </div>
+          <div class="font-black text-chickadee text-[0.9rem]">
+            {{ .Plant.Price }}
+          </div>
+        </div>
+      </div>
+
+      {{ if .Summary }}
+        <p
+          class="font-lora text-[#524d53] leading-[1.8] text-base m-0 mb-[18px]"
+        >
+          {{ .Summary }}
+        </p>
+      {{ end }}
+
+
+      <div class="flex gap-2.5 flex-wrap">
+        {{ if .Plant.InatURL }}
+          <a
+            href="{{ .Plant.InatURL }}"
+            target="_blank"
+            rel="noopener"
+            class="border-none rounded-full px-4 py-3 font-black cursor-pointer bg-stem text-white inline-flex items-center justify-center no-underline"
+            >View on iNaturalist</a
+          >
+        {{ end }}
+      </div>
+    </div>
   </div>
-
-  <!-- Detail column -->
-  <div>
-    <h3 class="font-kalam text-elderberry text-[2rem] leading-[1.1] m-0 max-md:text-[1.7rem]">{{.Plant.Common}}</h3>
-    <p class="italic text-[#8a858b] mt-1.5 mb-0">{{.Plant.Scientific}}</p>
-
-    <div class="flex flex-wrap gap-1.5 my-2.5">
-      <span class="bg-[#f0ede8] text-chickadee rounded-full px-3 py-1 text-[0.8rem]">{{.Plant.Section}}</span>
-      {{if .Plant.Color}}<span class="bg-[#f0ede8] text-chickadee rounded-full px-3 py-1 text-[0.8rem]">{{.Plant.Color}}</span>{{end}}
-    </div>
-
-    <div class="grid grid-cols-3 gap-2.5 my-4 max-lg:grid-cols-2 max-md:grid-cols-1">
-      <div class="bg-[#faf8f6] rounded-[14px] p-3 border border-line">
-        <div class="text-[0.72rem] uppercase tracking-wide text-[#918a92] mb-1">Bloom</div>
-        <div class="font-black text-chickadee text-[0.9rem]">{{.Plant.Bloom}}</div>
-      </div>
-      <div class="bg-[#faf8f6] rounded-[14px] p-3 border border-line">
-        <div class="text-[0.72rem] uppercase tracking-wide text-[#918a92] mb-1">Height</div>
-        <div class="font-black text-chickadee text-[0.9rem]">{{.Plant.Height}}</div>
-      </div>
-      <div class="bg-[#faf8f6] rounded-[14px] p-3 border border-line">
-        <div class="text-[0.72rem] uppercase tracking-wide text-[#918a92] mb-1">Sun</div>
-        <div class="font-black text-chickadee text-[0.9rem]">{{.Plant.Sun}}</div>
-      </div>
-      <div class="bg-[#faf8f6] rounded-[14px] p-3 border border-line">
-        <div class="text-[0.72rem] uppercase tracking-wide text-[#918a92] mb-1">Soil</div>
-        <div class="font-black text-chickadee text-[0.9rem]">{{.Plant.Soil}}</div>
-      </div>
-      <div class="bg-[#faf8f6] rounded-[14px] p-3 border border-line">
-        <div class="text-[0.72rem] uppercase tracking-wide text-[#918a92] mb-1">Price</div>
-        <div class="font-black text-chickadee text-[0.9rem]">{{.Plant.Price}}</div>
-      </div>
-    </div>
-
-    {{if .Summary}}
-    <p class="font-lora text-[#524d53] leading-[1.8] text-base m-0 mb-[18px]">{{.Summary}}</p>
-    {{end}}
-
-    <div class="flex gap-2.5 flex-wrap">
-      {{if .Plant.InatURL}}
-      <a
-        href="{{.Plant.InatURL}}"
-        target="_blank"
-        rel="noopener"
-        class="border-none rounded-full px-4 py-3 font-black cursor-pointer bg-stem text-white inline-flex items-center justify-center no-underline"
-      >View on iNaturalist</a>
-      {{end}}
-    </div>
-  </div>
-
-</div>
-{{end}}
+{{ end }}

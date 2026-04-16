@@ -1,115 +1,144 @@
-{{define "results"}}
-<section x-show="view === 'results'" class="max-w-[1150px] mx-auto px-4 pt-[26px] pb-6">
-
-  <!-- Top summary row -->
-  <div class="grid grid-cols-[1.4fr_0.85fr] gap-[18px] items-start max-lg:grid-cols-1">
-
-    <!-- Match summary -->
-    <div class="bg-white border border-elderberry/[0.08] rounded-[26px] shadow-md p-[22px_20px]">
-      <h2 class="font-kalam text-elderberry text-[1.9rem] m-0 mb-1.5">Your plant matches</h2>
-      <p class="m-0 text-[#6d6870] leading-[1.65]">
-        Filtered for
-        <span x-text="sun || 'any sun'"></span> &bull;
-        <span x-text="soil || 'any soil'"></span> &bull;
-        <span x-text="section || 'all groups'"></span>
-      </p>
-      <div class="flex gap-2.5 flex-wrap mt-4">
-        <button
-          class="border-2 border-elderberry rounded-full px-6 py-3 font-black cursor-pointer transition-all duration-200 hover:opacity-90 hover:-translate-y-px bg-transparent text-elderberry"
-          type="button"
-          @click="resetQuiz()"
-        >← Start Over</button>
-      </div>
-    </div>
-
-    <!-- Info chip panel -->
-    <div class="bg-gradient-to-br from-prickly/[0.16] to-goldenrod/[0.18] border border-elderberry/[0.08] rounded-[26px] shadow-md p-[22px_20px]">
-      <h3 class="m-0 mb-2 text-elderberry text-[1.25rem]">Plan your list before the sale</h3>
-      <p class="m-0 mb-3.5 text-[#615c61] leading-[1.65]">
-        Click any plant name to open photos and more info.
-      </p>
-      <div class="mt-3.5 p-[12px_14px] rounded-[16px] bg-[#f5f8f1] text-[#46603e] leading-[1.65] text-[0.92rem] border border-stem/[0.14]">
-        A simple way to help pollinators is to pick a mix of plants that bloom at different times,
-        so something is flowering from spring into fall.
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Filter / search controls -->
-  <form
-    id="filter-form"
-    hx-get="/plants"
-    hx-target="#plant-list"
-    hx-swap="innerHTML"
-    hx-trigger="load, change, input delay:300ms"
-    class="mt-[18px] bg-white border border-elderberry/[0.08] rounded-[22px] shadow-md p-4 max-md:p-3.5"
+{{ define "results" }}
+  <section
+    x-show="view === 'results'"
+    class="max-w-[1150px] mx-auto px-4 pt-[26px] pb-6"
   >
-    <div class="grid grid-cols-[1.45fr_repeat(4,0.8fr)_auto] gap-2.5 max-lg:grid-cols-2 max-md:grid-cols-1">
-
-      <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
-        <input
-          name="search"
-          type="text"
-          placeholder="Search plant name or scientific name"
-          class="w-full border-none outline-none bg-transparent text-chickadee"
-        />
+    <!-- Top summary row -->
+    <div
+      class="grid grid-cols-[1.4fr_0.85fr] gap-[18px] items-start max-lg:grid-cols-1"
+    >
+      <!-- Match summary -->
+      <div
+        class="bg-white border border-elderberry/[0.08] rounded-[26px] shadow-md p-[22px_20px]"
+      >
+        <h2 class="font-kalam text-elderberry text-[1.9rem] m-0 mb-1.5">
+          Your plant matches
+        </h2>
+        <p class="m-0 text-[#6d6870] leading-[1.65]">
+          Filtered for
+          <span x-text="sun || 'any sun'"></span> &bull;
+          <span x-text="soil || 'any soil'"></span> &bull;
+          <span x-text="section || 'all groups'"></span>
+        </p>
+        <div class="flex gap-2.5 flex-wrap mt-4">
+          <button
+            class="border-2 border-elderberry rounded-full px-6 py-3 font-black cursor-pointer transition-all duration-200 hover:opacity-90 hover:-translate-y-px bg-transparent text-elderberry"
+            type="button"
+            @click="resetQuiz()"
+          >
+            ← Start Over
+          </button>
+        </div>
       </div>
 
-      <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
-        <select name="section_filter" class="w-full border-none outline-none bg-transparent text-chickadee">
-          <option value="">All groups</option>
-          {{range .Sections}}
-          <option value="{{.}}">{{.}}</option>
-          {{end}}
-        </select>
+      <!-- Info chip panel -->
+      <div
+        class="bg-gradient-to-br from-prickly/[0.16] to-goldenrod/[0.18] border border-elderberry/[0.08] rounded-[26px] shadow-md p-[22px_20px]"
+      >
+        <h3 class="m-0 mb-2 text-elderberry text-[1.25rem]">
+          Plan your list before the sale
+        </h3>
+        <p class="m-0 mb-3.5 text-[#615c61] leading-[1.65]">
+          Click any plant name to open photos and more info.
+        </p>
+        <div
+          class="mt-3.5 p-[12px_14px] rounded-[16px] bg-[#f5f8f1] text-[#46603e] leading-[1.65] text-[0.92rem] border border-stem/[0.14]"
+        >
+          A simple way to help pollinators is to pick a mix of plants that bloom
+          at different times, so something is flowering from spring into fall.
+        </div>
       </div>
-
-      <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
-        <select name="sun_filter" class="w-full border-none outline-none bg-transparent text-chickadee">
-          <option value="">All sun</option>
-          {{range .Suns}}
-          <option value="{{.}}">{{.}}</option>
-          {{end}}
-        </select>
-      </div>
-
-      <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
-        <select name="soil_filter" class="w-full border-none outline-none bg-transparent text-chickadee">
-          <option value="">All soil</option>
-          {{range .Soils}}
-          <option value="{{.}}">{{.}}</option>
-          {{end}}
-        </select>
-      </div>
-
-      <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
-        <select name="sort" class="w-full border-none outline-none bg-transparent text-chickadee">
-          <option value="common">Sort: Name</option>
-          <option value="bloom">Sort: Bloom</option>
-          <option value="height">Sort: Height</option>
-          <option value="price">Sort: Price</option>
-          <option value="section">Sort: Group</option>
-        </select>
-      </div>
-
-      <button
-        class="bg-elderberry text-white border-none rounded-2xl px-[18px] py-3 font-black cursor-pointer"
-        type="reset"
-        @click.prevent="$nextTick(() => htmx.trigger(document.getElementById('filter-form'), 'submit'))"
-      >Clear</button>
-
     </div>
-  </form>
 
-  <!-- Plant list target -->
-  <div id="plant-list" class="mt-[18px]">
-    <p class="text-center text-[#837d83] py-8">Loading plants…</p>
-  </div>
+    <!-- Filter / search controls -->
+    <form
+      id="filter-form"
+      hx-get="/plants"
+      hx-target="#plant-list"
+      hx-swap="innerHTML"
+      hx-trigger="load, change, input delay:300ms"
+      class="mt-[18px] bg-white border border-elderberry/[0.08] rounded-[22px] shadow-md p-4 max-md:p-3.5"
+    >
+      <div
+        class="grid grid-cols-[1.45fr_repeat(4,0.8fr)_auto] gap-2.5 max-lg:grid-cols-2 max-md:grid-cols-1"
+      >
+        <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
+          <input
+            name="search"
+            type="text"
+            placeholder="Search plant name or scientific name"
+            class="w-full border-none outline-none bg-transparent text-chickadee"
+          />
+        </div>
 
-  <p class="mt-3 mx-0.5 text-[#7e7880] text-[0.82rem] text-center max-md:text-[0.78rem] max-md:mt-2.5">
-    Tap any plant name or details button to open photos and more info.
-  </p>
+        <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
+          <select
+            name="section_filter"
+            class="w-full border-none outline-none bg-transparent text-chickadee"
+          >
+            <option value="">All groups</option>
+            {{ range .Sections }}
+              <option value="{{ . }}">{{ . }}</option>
+            {{ end }}
+          </select>
+        </div>
 
-</section>
-{{end}}
+        <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
+          <select
+            name="sun_filter"
+            class="w-full border-none outline-none bg-transparent text-chickadee"
+          >
+            <option value="">All sun</option>
+            {{ range .Suns }}
+              <option value="{{ . }}">{{ . }}</option>
+            {{ end }}
+          </select>
+        </div>
+
+        <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
+          <select
+            name="soil_filter"
+            class="w-full border-none outline-none bg-transparent text-chickadee"
+          >
+            <option value="">All soil</option>
+            {{ range .Soils }}
+              <option value="{{ . }}">{{ . }}</option>
+            {{ end }}
+          </select>
+        </div>
+
+        <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
+          <select
+            name="sort"
+            class="w-full border-none outline-none bg-transparent text-chickadee"
+          >
+            <option value="common">Sort: Name</option>
+            <option value="bloom">Sort: Bloom</option>
+            <option value="height">Sort: Height</option>
+            <option value="price">Sort: Price</option>
+            <option value="section">Sort: Group</option>
+          </select>
+        </div>
+
+        <button
+          class="bg-elderberry text-white border-none rounded-2xl px-[18px] py-3 font-black cursor-pointer"
+          type="reset"
+          @click.prevent="$nextTick(() => htmx.trigger(document.getElementById('filter-form'), 'submit'))"
+        >
+          Clear
+        </button>
+      </div>
+    </form>
+
+    <!-- Plant list target -->
+    <div id="plant-list" class="mt-[18px]">
+      <p class="text-center text-[#837d83] py-8">Loading plants…</p>
+    </div>
+
+    <p
+      class="mt-3 mx-0.5 text-[#7e7880] text-[0.82rem] text-center max-md:text-[0.78rem] max-md:mt-2.5"
+    >
+      Tap any plant name or details button to open photos and more info.
+    </p>
+  </section>
+{{ end }}

@@ -1,45 +1,47 @@
-{{define "plant_drawer"}}
-<div
-  x-data="{ open: false }"
-  @open-drawer.window="open = true"
-  x-show="open"
-  class="fixed inset-0 z-[500]"
-  x-cloak
->
-  <!-- Backdrop -->
+{{ define "plant_drawer" }}
   <div
-    class="absolute inset-0 bg-[rgba(26,18,31,.5)] backdrop-blur-[5px]"
-    @click="open = false"
+    x-data="{ open: false }"
+    @open-drawer.window="open = true"
     x-show="open"
-    x-transition:enter="transition duration-200"
-    x-transition:enter-start="opacity-0"
-    x-transition:enter-end="opacity-100"
-    x-transition:leave="transition duration-150"
-    x-transition:leave-start="opacity-100"
-    x-transition:leave-end="opacity-0"
-  ></div>
-
-  <!-- Sheet -->
-  <div
-    class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(980px,calc(100%-24px))] max-h-[min(90vh,960px)] overflow-auto bg-white rounded-[28px] shadow-[0_24px_70px_rgba(20,12,30,.28)] p-[22px] max-md:top-auto max-md:bottom-0 max-md:rounded-b-none max-md:max-h-[86vh] max-md:w-full max-md:translate-y-0 max-md:translate-x-[-50%]"
-    x-show="open"
-    x-transition:enter="transition duration-200"
-    x-transition:enter-start="opacity-0 scale-95"
-    x-transition:enter-end="opacity-100 scale-100"
-    x-transition:leave="transition duration-150"
-    x-transition:leave-start="opacity-100 scale-100"
-    x-transition:leave-end="opacity-0 scale-95"
+    class="fixed inset-0 z-[500]"
+    x-cloak
   >
-    <button
-      class="absolute top-3 right-3 w-10 h-10 border-none rounded-full bg-[#f3efeb] text-elderberry cursor-pointer"
+    <!-- Backdrop -->
+    <div
+      class="absolute inset-0 bg-[rgba(26,18,31,.5)] backdrop-blur-[5px]"
       @click="open = false"
-      type="button"
-    >✕</button>
-    <div class="w-[42px] h-[5px] rounded-full bg-[#ddd] mx-auto mb-3.5"></div>
+      x-show="open"
+      x-transition:enter="transition duration-200"
+      x-transition:enter-start="opacity-0"
+      x-transition:enter-end="opacity-100"
+      x-transition:leave="transition duration-150"
+      x-transition:leave-start="opacity-100"
+      x-transition:leave-end="opacity-0"
+    ></div>
 
-    <div id="drawer-content">
-      <!-- Filled by HTMX -->
+    <!-- Sheet -->
+    <div
+      class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(980px,calc(100%-24px))] max-h-[min(90vh,960px)] overflow-auto bg-white rounded-[28px] shadow-[0_24px_70px_rgba(20,12,30,.28)] p-[22px] max-md:top-auto max-md:bottom-0 max-md:rounded-b-none max-md:max-h-[86vh] max-md:w-full max-md:translate-y-0 max-md:translate-x-[-50%]"
+      x-show="open"
+      x-transition:enter="transition duration-200"
+      x-transition:enter-start="opacity-0 scale-95"
+      x-transition:enter-end="opacity-100 scale-100"
+      x-transition:leave="transition duration-150"
+      x-transition:leave-start="opacity-100 scale-100"
+      x-transition:leave-end="opacity-0 scale-95"
+    >
+      <button
+        class="absolute top-3 right-3 w-10 h-10 border-none rounded-full bg-[#f3efeb] text-elderberry cursor-pointer"
+        @click="open = false"
+        type="button"
+      >
+        ✕
+      </button>
+      <div class="w-[42px] h-[5px] rounded-full bg-[#ddd] mx-auto mb-3.5"></div>
+
+      <div id="drawer-content">
+        <!-- Filled by HTMX -->
+      </div>
     </div>
   </div>
-</div>
-{{end}}
+{{ end }}

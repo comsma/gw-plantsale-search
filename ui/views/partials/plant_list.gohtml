@@ -1,76 +1,113 @@
-{{define "plant_list"}}
-{{if not .Plants}}
-<div class="p-7 text-center bg-white rounded-[20px] border border-dashed border-line flex flex-col items-center gap-3">
-  <p class="text-xl font-bold text-gray-500 m-0">No plants matched those filters.</p>
-  {{if or .Section .Sun .Soil}}
-  <button
-    type="button"
-    class="btn btn-warning"
-    onclick="document.querySelectorAll('#filter-form select[name=section], #filter-form select[name=sun], #filter-form select[name=soil]').forEach(s => s.value = '')"
-    hx-get="/plants?search={{.Search}}"
-    hx-target="#plant-list"
-    hx-push-url="true"
-  >Clear filters</button>
-  {{else}}
-  <p class="text-gray-400 text-sm m-0">Try a different search term.</p>
-  {{end}}
-</div>
-{{else}}
-<div class="grid grid-cols-3 gap-4 max-md:grid-cols-1">
-  {{range .Plants}}
-  <button
-    class="plant-card text-left bg-white rounded-[18px] border border-line shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-    hx-get="/plants/{{.Taxon}}"
-    hx-target="#drawer-content"
-    hx-swap="innerHTML"
-    hx-on::after-request="window.dispatchEvent(new Event('open-drawer'))"
-    type="button"
-  >
-    <!-- Image -->
-    <div class="aspect-[4/3] bg-gradient-to-br from-prickly/[0.15] to-stem/10 overflow-hidden">
-      {{if .ImageURL}}
-      <img src="{{.ImageURL}}" alt="{{.Common}}" class="w-full h-full object-cover" decoding="async" />
-      {{else}}
-      <div class="w-full h-full grid place-items-center text-[2.5rem] opacity-40">🌿</div>
-      {{end}}
+{{ define "plant_list" }}
+  {{ if not .Plants }}
+    <div
+      class="p-7 text-center bg-white rounded-[20px] border border-dashed border-line flex flex-col items-center gap-3"
+    >
+      <p class="text-xl font-bold text-gray-500 m-0">
+        No plants matched those filters.
+      </p>
+      {{ if or .Section .Sun .Soil }}
+        <button
+          type="button"
+          class="btn btn-warning"
+          onclick="document.querySelectorAll('#filter-form select[name=section], #filter-form select[name=sun], #filter-form select[name=soil]').forEach(s => s.value = '')"
+          hx-get="/plants?search={{ .Search }}"
+          hx-target="#plant-list"
+          hx-push-url="true"
+        >
+          Clear filters
+        </button>
+      {{ else }}
+        <p class="text-gray-400 text-sm m-0">Try a different search term.</p>
+      {{ end }}
     </div>
+  {{ else }}
+    <div class="grid grid-cols-3 gap-4 max-md:grid-cols-1">
+      {{ range .Plants }}
+        <button
+          class="plant-card text-left bg-white rounded-[18px] border border-line shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+          hx-get="/plants/{{ .Taxon }}"
+          hx-target="#drawer-content"
+          hx-swap="innerHTML"
+          hx-on::after-request="window.dispatchEvent(new Event('open-drawer'))"
+          type="button"
+        >
+          <!-- Image -->
+          <div
+            class="aspect-[4/3] bg-gradient-to-br from-prickly/[0.15] to-stem/10 overflow-hidden"
+          >
+            {{ if .ImageURL }}
+              <img
+                src="{{ .ImageURL }}"
+                alt="{{ .Common }}"
+                class="w-full h-full object-cover"
+                decoding="async"
+              />
+            {{ else }}
+              <div
+                class="w-full h-full grid place-items-center text-[2.5rem] opacity-40"
+              >
+                🌿
+              </div>
+            {{ end }}
+          </div>
 
-    <!-- Body -->
-    <div class="p-4">
-      <div class="flex flex-row justify-between">
-        <div>
-          <p class="font-black text-elderberry text-[1rem] leading-snug m-0">{{.Common}}</p>
-        <p class="italic text-[#8a858b] text-[0.78rem] mt-0.5 mb-3 m-0">{{.Scientific}}</p>
-        </div>
-        {{ if .Available }}
-          <span class="badge badge-soft bg-green-500/5 font-black text-stem ">Available</span>
-        {{ else }}
-          <span class="badge badge-soft bg-red-700/5 font-black text-red-700 ">Not Available</span>
-        {{ end }}
-      </div>
+          <!-- Body -->
+          <div class="p-4">
+            <div class="flex flex-row justify-between">
+              <div>
+                <p
+                  class="font-black text-elderberry text-[1rem] leading-snug m-0"
+                >
+                  {{ .Common }}
+                </p>
+                <p class="italic text-[#8a858b] text-[0.78rem] mt-0.5 mb-3 m-0">
+                  {{ .Scientific }}
+                </p>
+              </div>
+              {{ if .Available }}
+                <span
+                  class="badge badge-soft bg-green-500/5 font-black text-stem "
+                  >Available</span
+                >
+              {{ else }}
+                <span
+                  class="badge badge-soft bg-red-700/5 font-black text-red-700 "
+                  >Not Available</span
+                >
+              {{ end }}
+            </div>
 
+            <div class="flex flex-wrap gap-1.5 mb-3">
+              {{ if .Sun }}<span class="plant-tag">{{ .Sun }}</span>{{ end }}
+              {{ if .Soil }}<span class="plant-tag">{{ .Soil }}</span>{{ end }}
+              {{ if .Bloom }}
+                <span class="plant-tag">{{ .Bloom }}</span>
+              {{ end }}
+              {{ if .Height }}
+                <span class="plant-tag">{{ .Height }}</span>
+              {{ end }}
+            </div>
 
-      <div class="flex flex-wrap gap-1.5 mb-3">
-        {{if .Sun}}<span class="plant-tag">{{.Sun}}</span>{{end}}
-        {{if .Soil}}<span class="plant-tag">{{.Soil}}</span>{{end}}
-        {{if .Bloom}}<span class="plant-tag">{{.Bloom}}</span>{{end}}
-        {{if .Height}}<span class="plant-tag">{{.Height}}</span>{{end}}
-      </div>
-
-      <div class="flex items-center justify-between">
-        <span class="font-black text-stem text-[0.95rem]">{{.Price}}</span>
-        <span class="text-[0.78rem] font-black text-elderberry/60">Details →</span>
-      </div>
+            <div class="flex items-center justify-between">
+              <span class="font-black text-stem text-[0.95rem]"
+                >{{ .Price }}</span
+              >
+              <span class="text-[0.78rem] font-black text-elderberry/60"
+                >Details →</span
+              >
+            </div>
+          </div>
+        </button>
+      {{ end }}
+      {{ if .HasMore }}
+        <div
+          class="col-span-full"
+          hx-get="{{ .NextPageURL }}"
+          hx-trigger="intersect once"
+          hx-swap="outerHTML"
+        ></div>
+      {{ end }}
     </div>
-  </button>
-  {{end}}
-  {{if .HasMore}}
-  <div class="col-span-full"
-    hx-get="{{.NextPageURL}}"
-    hx-trigger="intersect once"
-    hx-swap="outerHTML">
-  </div>
-  {{end}}
-</div>
-{{end}}
-{{end}}
+  {{ end }}
+{{ end }}

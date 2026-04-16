@@ -1,127 +1,141 @@
-{{template "layout" .}}
+{{ template "layout" . }}
 
-{{define "content"}}
-  <header class="bg-elderberry text-white px-[18px] pt-[22px] pb-[18px] text-center shadow-[0_6px_18px_rgba(62,33,72,.08)]">
-    <h1 class="font-kalam text-[clamp(1.8rem,5vw,2.4rem)] leading-[1.15] m-0">
-      🌿 What Should I Plant Here?
-    </h1>
-    <p class="mt-1.5 mb-0 text-[0.92rem] text-white/82">
-      Wild Ones Gibson Woods &bull; Native Plant Sale &bull; May 2, 2026
-    </p>
-  </header>
-
-  <main class="max-w-[1150px] mx-auto px-4 pt-[26px] pb-6">
-
+{{ define "content" }}
+  {{ template "header" }}
+  <main class="max-w-[1150px] mx-auto px-4 pt-[22px] pb-6">
     <!-- Top summary row -->
-    <div class="grid grid-cols-[1.4fr_0.85fr] gap-[18px] items-start max-lg:grid-cols-1">
-      <div class="flex gap-2.5 flex-wrap mt-4">
-        <a
-                href="/"
-                class="btn btn-outline border-2"
-        >← Start Over</a>
-      </div>
-
-      <!-- Info chip panel -->
-      <div class="bg-gradient-to-br from-prickly/[0.16] to-goldenrod/[0.18] border border-elderberry/[0.08] rounded-[26px] shadow-md p-[22px_20px]">
-        <h3 class="m-0 mb-2 text-elderberry text-[1.25rem]">Plan your list before the sale</h3>
-        <p class="m-0 mb-3.5 text-[#615c61] leading-[1.65]">
-          Click any plant name to open photos and more info.
-        </p>
-        <div class="mt-3.5 p-[12px_14px] rounded-[16px] bg-[#f5f8f1] text-[#46603e] leading-[1.65] text-[0.92rem] border border-stem/[0.14]">
-          A simple way to help pollinators is to pick a mix of plants that bloom at different times,
-          so something is flowering from spring into fall.
-        </div>
-      </div>
-
+    <div class="flex gap-2.5 flex-wrap mb-4">
+      <a href="/" class="btn btn-outline border-2">← Start Over</a>
     </div>
 
-    <div class="card bg-white ">
+    <div class="card bg-white">
       <div class="card-body">
         <div class="card-title text-elderberry">
           <h2 class="font-kalam text-2xl">Your plant matches</h2>
         </div>
         <form
-                id="filter-form"
-                hx-get="/plants"
-                hx-target="#plant-list"
-                hx-swap="innerHTML"
-                hx-trigger="change, input delay:300ms"
-                hx-push-url="true"
-                class="mt-[18px]"
+          id="filter-form"
+          hx-get="/plants"
+          hx-target="#plant-list"
+          hx-swap="innerHTML"
+          hx-trigger="change, input delay:300ms"
+          hx-push-url="true"
+          class="mt-[14px] flex flex-col gap-2"
         >
-          <div class="flex flex-col lg:flex-row gap-4 items-stretch">
+          <!-- Search row -->
+          <label class="input w-full">
+            <svg
+              class="w-4 h-4 text-[#918a92] shrink-0"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              name="search"
+              type="search"
+              placeholder="Search plant name or scientific name…"
+              value="{{ .Search }}"
+              class="grow text-chickadee "
+            />
+          </label>
 
-            <div class="flex-1 bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
-              <input
-                      name="search"
-                      type="text"
-                      placeholder="Search plant name or scientific name"
-                      value="{{.Search}}"
-                      class="w-full border-none outline-none bg-transparent text-chickadee"
-              />
-            </div>
+          <!-- Filter row -->
+          <div class="flex flex-col lg:flex-row gap-2">
+            <label for="category" class="sr-only">
+              Select Plant Category
+            </label>
+            <select
+              id="category"
+              name="section"
+              class="select text-chickadee w-full lg:w-auto"
+            >
+              <option value="">All Plants</option>
+              {{ range .Sections }}
+                <option
+                  value="{{ . }}"
+                  {{ if eq . $.Section }}selected{{ end }}
+                >
+                  {{ . }}
+                </option>
+              {{ end }}
+            </select>
+            <label for="sun" class="sr-only"> Select Sun Requirements </label>
+            <select
+              id="sun"
+              name="sun"
+              class="select text-chickadee w-full lg:w-auto"
+            >
+              <option value="">All sun</option>
+              {{ range .Suns }}
+                <option value="{{ . }}" {{ if eq . $.Sun }}selected{{ end }}>
+                  {{ . }}
+                </option>
+              {{ end }}
+            </select>
 
-            <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
-              <select name="section" class="w-full border-none outline-none bg-transparent text-chickadee">
-                <option value="">All groups</option>
-                {{range .Sections}}
-                  <option value="{{.}}" {{if eq . $.Section}}selected{{end}}>{{.}}</option>
-                {{end}}
-              </select>
-            </div>
+            <label for="soil" class="sr-only"> Select Soil Moisture: </label>
+            <select
+              id="soil"
+              name="soil"
+              class="select text-chickadee w-full lg:w-auto"
+            >
+              <option value="">All soil</option>
+              {{ range .Soils }}
+                <option value="{{ . }}" {{ if eq . $.Soil }}selected{{ end }}>
+                  {{ . }}
+                </option>
+              {{ end }}
+            </select>
 
-            <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
-              <select name="sun" class="w-full border-none outline-none bg-transparent text-chickadee">
-                <option value="">All sun</option>
-                {{range .Suns}}
-                  <option value="{{.}}" {{if eq . $.Sun}}selected{{end}}>{{.}}</option>
-                {{end}}
-              </select>
-            </div>
-
-            <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
-              <select name="soil" class="w-full border-none outline-none bg-transparent text-chickadee">
-                <option value="">All soil</option>
-                {{range .Soils}}
-                  <option value="{{.}}" {{if eq . $.Soil}}selected{{end}}>{{.}}</option>
-                {{end}}
-              </select>
-            </div>
-
-            <div class="bg-[#fbfaf9] border border-line rounded-2xl px-3.5 py-3">
-              <select name="sort" class="w-full border-none outline-none bg-transparent text-chickadee">
-                <option value="common" {{if eq .Sort "common"}}selected{{end}}>Sort: Name</option>
-                <option value="height" {{if eq .Sort "height"}}selected{{end}}>Sort: Height</option>
-                <option value="price" {{if eq .Sort "price"}}selected{{end}}>Sort: Price</option>
-              </select>
-            </div>
+            <label for="sort" class="sr-only"> Select Sort By </label>
+            <select
+              id="sort"
+              name="sort"
+              class="select text-chickadee w-full lg:w-auto"
+            >
+              <option
+                value="common"
+                {{ if eq .Sort "common" }}selected{{ end }}
+              >
+                Sort: Name
+              </option>
+              <option
+                value="height"
+                {{ if eq .Sort "height" }}selected{{ end }}
+              >
+                Sort: Height
+              </option>
+              <option value="price" {{ if eq .Sort "price" }}selected{{ end }}>
+                Sort: Price
+              </option>
+            </select>
 
             <a
-                    href="/plants"
-                    class="btn btn-warning px-3.5 py-3"
-            >Clear</a>
-
+              href="/plants"
+              class="btn btn-warning w-full lg:w-auto lg:ml-auto"
+              >Clear</a
+            >
           </div>
         </form>
+
         <!-- Plant list target -->
         <div id="plant-list" class="mt-[18px]">
-          {{template "plant_list" .}}
-
+          {{ template "plant_list" . }}
         </div>
 
-        <p class="mt-3 mx-0.5 text-[#7e7880] text-[0.82rem] text-center max-md:text-[0.78rem] max-md:mt-2.5">
-          Tap any plant name or details button to open photos and more info.
+        <p
+          class="mt-3 mx-0.5 text-[#7e7880] text-[0.82rem] text-center max-md:text-[0.78rem] max-md:mt-2.5"
+        >
+          Tap any plant to open photos and more info.
         </p>
       </div>
     </div>
-
-    <!-- Filter / search controls -->
-
-
-
-
   </main>
 
-  {{template "plant_drawer" .}}
-  {{template "toast" .}}
-{{end}}
+  {{ template "plant_drawer" . }}
+  {{ template "toast" . }}
+{{ end }}

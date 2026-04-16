@@ -1,34 +1,34 @@
-{{define "scripts"}}
-<script>
-  document.addEventListener('alpine:init', () => {
-    Alpine.data('pageState', () => ({
-      step: 0,
-      sun: '',
-      soil: '',
-      section: '',
+{{ define "scripts" }}
+  <script>
+    document.addEventListener("alpine:init", () => {
+      Alpine.data("pageState", () => ({
+        step: 0,
+        sun: "",
+        soil: "",
+        section: "",
 
-      submitWizard() {
-        const eff = v => (v === 'Any' ? '' : v);
-        const params = new URLSearchParams({
-          sun: eff(this.sun),
-          soil: eff(this.soil),
-          section: eff(this.section),
+        submitWizard() {
+          const eff = (v) => (v === "Any" ? "" : v);
+          const params = new URLSearchParams({
+            sun: eff(this.sun),
+            soil: eff(this.soil),
+            section: eff(this.section),
+          });
+          window.location.href = "/plants?" + params.toString();
+        },
+      }));
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const btn = document.getElementById("startBtn");
+      const splash = document.getElementById("splash");
+      if (btn && splash) {
+        btn.addEventListener("click", () => {
+          splash.style.opacity = "0";
+          splash.style.transition = "opacity 0.4s";
+          setTimeout(() => splash.remove(), 400);
         });
-        window.location.href = '/plants?' + params.toString();
-      },
-    }));
-  });
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('startBtn');
-    const splash = document.getElementById('splash');
-    if (btn && splash) {
-      btn.addEventListener('click', () => {
-        splash.style.opacity = '0';
-        splash.style.transition = 'opacity 0.4s';
-        setTimeout(() => splash.remove(), 400);
-      });
-    }
-  });
-</script>
-{{end}}
+      }
+    });
+  </script>
+{{ end }}

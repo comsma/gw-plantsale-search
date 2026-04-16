@@ -1,15 +1,23 @@
-{{define "header"}}
-<header class="bg-elderberry text-white px-[18px] pt-[22px] pb-[18px] text-center shadow-[0_6px_18px_rgba(62,33,72,.08)]">
-  <h1 class="font-kalam text-[clamp(1.8rem,5vw,2.4rem)] leading-[1.15] m-0">
-    🌿 What Should I Plant Here?
-  </h1>
-  <p class="mt-1.5 mb-0 text-[0.92rem] text-white/82">
-    Wild Ones Gibson Woods &bull; Native Plant Sale &bull; May 2, 2026
-  </p>
-  <div class="flex justify-center gap-2.5 mt-3.5" x-data>
-    <div class="dot" :class="{ active: $root.step >= 0, done: $root.step > 0 }"></div>
-    <div class="dot" :class="{ active: $root.step >= 1, done: $root.step > 1 }"></div>
-    <div class="dot" :class="{ active: $root.step >= 2 }"></div>
-  </div>
-</header>
-{{end}}
+{{ define "header" }}
+  <header class="bg-elderberry text-white ">
+    <div
+      class="max-w-[1150px] mx-auto px-[18px] py-[14px] flex items-center gap-4"
+    >
+      <img
+        src="/static/images/Wild-Ones-Chapter-Logo.svg"
+        alt="Wild Ones Gibson Woods"
+        class="h-24 w-auto shrink-0"
+      />
+      <div>
+        <h1
+          class="font-kalam text-[clamp(1.4rem,3.5vw,2rem)] leading-[1.15] m-0"
+        >
+          What Should I Plant Here?
+        </h1>
+        <p class="mt-1 mb-0 text-[0.85rem] text-white/80">
+          Wild Ones Gibson Woods &bull; Native Plant Sale &bull; May 2, 2026
+        </p>
+      </div>
+    </div>
+  </header>
+{{ end }}
