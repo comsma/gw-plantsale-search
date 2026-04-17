@@ -5,30 +5,49 @@
 package models
 
 import (
-	"database/sql"
-	"time"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Inatrualist struct {
-	PlantID     string    `json:"plant_id"`
-	Summary     string    `json:"summary"`
-	ImageUrl    string    `json:"image_url"`
-	Attribution string    `json:"attribution"`
-	LastUpdated time.Time `json:"last_updated"`
+	PlantID     string
+	Summary     string
+	ImageUrl    string
+	Attribution string
+	LastUpdated pgtype.Date
+	FtsSummary  interface{}
 }
 
 type Plant struct {
-	ID                 string         `json:"id"`
-	Common             string         `json:"common"`
-	Scientific         sql.NullString `json:"scientific"`
-	InatrualistTaxonID sql.NullString `json:"inatrualist_taxon_id"`
-	Section            sql.NullString `json:"section"`
-	Color              sql.NullString `json:"color"`
-	Bloom              sql.NullString `json:"bloom"`
-	Height             sql.NullString `json:"height"`
-	HeightSort         sql.NullString `json:"height_sort"`
-	Sun                sql.NullString `json:"sun"`
-	Water              sql.NullString `json:"water"`
-	Price              string         `json:"price"`
-	Available          bool           `json:"available"`
+	ID                 string
+	Common             string
+	Scientific         pgtype.Text
+	InatrualistTaxonID pgtype.Text
+	Section            pgtype.Text
+	Color              pgtype.Text
+	Bloom              pgtype.Text
+	Height             pgtype.Text
+	HeightSort         pgtype.Text
+	Sun                pgtype.Text
+	Water              pgtype.Text
+	Price              pgtype.Numeric
+	Available          bool
+	FtsCommon          interface{}
+}
+
+type PlantSearchView struct {
+	ID                 string
+	Common             string
+	Scientific         pgtype.Text
+	InatrualistTaxonID pgtype.Text
+	Section            pgtype.Text
+	Color              pgtype.Text
+	Bloom              pgtype.Text
+	Height             pgtype.Text
+	HeightSort         pgtype.Text
+	Sun                pgtype.Text
+	Water              pgtype.Text
+	Price              pgtype.Numeric
+	Available          bool
+	ImageUrl           pgtype.Text
+	SearchVector       interface{}
 }

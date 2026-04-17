@@ -2,18 +2,15 @@ package server
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/comsma/gw-plantsale-search/internal/indexer"
 	"github.com/comsma/gw-plantsale-search/internal/models"
-	"github.com/comsma/gw-plantsale-search/internal/search"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v5"
 )
 
@@ -21,7 +18,6 @@ type Handler struct {
 	session *scs.SessionManager
 	queries *models.Queries
 	syncer  *indexer.Syncer
-	search  *search.Index
 }
 
 // PlantView maps models.Plant to template-compatible field names.
@@ -41,24 +37,23 @@ type PlantView struct {
 	ImageURL   string
 }
 
-func toPlantViewFromDoc(d search.PlantDoc) PlantView {
+func toPlantViewFromSearchRow(r models.SearchPlantsRow) PlantView {
 	return PlantView{
-		Taxon:      d.ID,
-		Common:     d.Common,
-		Scientific: d.Scientific,
-		Section:    d.Section,
-		Color:      d.Color,
-		Bloom:      d.Bloom,
-		Height:     d.Height,
-		Sun:        d.Sun,
-		Soil:       d.Water,
-		Price:      formatPrice(d.Price),
-		InatURL:    inatURLStr(d.ID),
-		ImageURL:   d.ImageURL,
-		Available:  true, // only available plants are indexed
+		Taxon:      r.ID,
+		Common:     r.Common,
+		Scientific: r.Scientific.String,
+		Section:    r.Section.String,
+		Color:      r.Color.String,
+		Bloom:      r.Bloom.String,
+		Height:     r.Height.String,
+		Sun:        r.Sun.String,
+		Soil:       r.Water.String,
+		ImageURL:   r.ImageUrl.String,
+		Price:      formatPrice(r.Price),
+		InatURL:    inatURL(r.InatrualistTaxonID.String),
+		Available:  r.Available,
 	}
 }
-
 func toPlantViewFromRow(r models.GetPlantWithInatrualistRow) PlantView {
 	return PlantView{
 		Taxon:      r.ID,
@@ -71,37 +66,9 @@ func toPlantViewFromRow(r models.GetPlantWithInatrualistRow) PlantView {
 		Sun:        r.Sun.String,
 		Soil:       r.Water.String,
 		Price:      formatPrice(r.Price),
-		InatURL:    inatURL(r.InatrualistTaxonID),
+		InatURL:    inatURL(r.InatrualistTaxonID.String),
 		Available:  r.Available,
 	}
-}
-
-func inatURL(taxonID sql.NullString) string {
-	return inatURLStr(taxonID.String)
-}
-
-func inatURLStr(taxonID string) string {
-	if taxonID != "" {
-		return "https://www.inaturalist.org/taxa/" + taxonID
-	}
-	return ""
-}
-
-func formatPrice(s string) string {
-	if s == "" {
-		return ""
-	}
-	return fmt.Sprintf("$%s", strings.TrimRight(strings.TrimRight(s, "0"), "."))
-}
-
-func unwrapNullStrings(items []sql.NullString) []string {
-	out := make([]string, 0, len(items))
-	for _, v := range items {
-		if v.Valid {
-			out = append(out, v.String)
-		}
-	}
-	return out
 }
 
 type HomeData struct {
@@ -140,9 +107,9 @@ func (h *Handler) Home(c *echo.Context) error {
 	soils, _ := h.queries.GetDistinctWaters(ctx)
 
 	return c.Render(http.StatusOK, "pages/index.gohtml", HomeData{
-		Sections: unwrapNullStrings(sections),
-		Suns:     unwrapNullStrings(suns),
-		Soils:    unwrapNullStrings(soils),
+		Sections: unwrapTextSlice(sections),
+		Suns:     unwrapTextSlice(suns),
+		Soils:    unwrapTextSlice(soils),
 	})
 }
 
@@ -159,22 +126,21 @@ func (h *Handler) PlantList(c *echo.Context) error {
 		offset = 0
 	}
 
-	docs, err := h.search.Search(search.SearchParams{
-		Query:   query,
-		Section: section,
-		Color:   color,
-		Sun:     sun,
-		Water:   water,
-		Sort:    sort,
+	plants, err := h.queries.SearchPlants(ctx, models.SearchPlantsParams{
+		Query:      query,
+		Section:    section,
+		Color:      color,
+		Sun:        sun,
+		Water:      water,
+		SortColumn: sort,
 	})
 	if err != nil {
-		log.Printf("search error: %v", err)
-		docs = nil
+		return err
 	}
 
-	all := make([]PlantView, len(docs))
-	for i, d := range docs {
-		all[i] = toPlantViewFromDoc(d)
+	all := make([]PlantView, len(plants))
+	for i, p := range plants {
+		all[i] = toPlantViewFromSearchRow(p)
 	}
 
 	end := offset + pageSize
@@ -211,9 +177,9 @@ func (h *Handler) PlantList(c *echo.Context) error {
 	soils, _ := h.queries.GetDistinctWaters(ctx)
 
 	data := PlantListData{
-		Sections:    unwrapNullStrings(sections),
-		Suns:        unwrapNullStrings(suns),
-		Soils:       unwrapNullStrings(soils),
+		Sections:    unwrapTextSlice(sections),
+		Suns:        unwrapTextSlice(suns),
+		Soils:       unwrapTextSlice(soils),
 		Sun:         sun,
 		Soil:        water,
 		Section:     section,
@@ -254,4 +220,33 @@ func (h *Handler) PlantDetail(c *echo.Context) error {
 		ImageURL:         row.ImageUrl.String,
 		ImageAttribution: row.Attribution.String,
 	})
+}
+
+func unwrapTextSlice(ts []pgtype.Text) []string {
+	out := make([]string, 0, len(ts))
+	for _, t := range ts {
+		if t.Valid {
+			out = append(out, t.String)
+		}
+	}
+	return out
+}
+
+func inatURL(taxonID string) string {
+	if taxonID != "" {
+		return "https://www.inaturalist.org/taxa/" + taxonID
+	}
+	return ""
+}
+
+func formatPrice(n pgtype.Numeric) string {
+	if !n.Valid {
+		return ""
+	}
+
+	floatVal, err := n.Float64Value()
+	if err != nil {
+		return ""
+	}
+	return fmt.Sprintf("$%.2f", floatVal.Float64)
 }

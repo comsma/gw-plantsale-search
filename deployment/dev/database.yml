@@ -7,14 +7,14 @@ spec:
   template:
     spec:
       containers:
-      - image: docker.io/library/mariadb:11.3
+      - image: docker.io/postgres:18.3
         name: db
         env:
-          - name:  MARIADB_ROOT_PASSWORD
+          - name:  POSTGRES_PASSWORD
             value: password
         ports:
-        - containerPort: 3306
-          hostPort: 3307
+        - containerPort: 5432
+          hostPort: 5432
   selector:
     matchLabels:
       app: plantsale-search

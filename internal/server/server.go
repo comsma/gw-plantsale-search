@@ -1,23 +1,20 @@
 package server
 
 import (
-	"context"
-	"database/sql"
 	"fmt"
 	"io/fs"
-	"log"
 	"time"
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/comsma/gw-plantsale-search/internal/indexer"
 	"github.com/comsma/gw-plantsale-search/internal/models"
-	"github.com/comsma/gw-plantsale-search/internal/search"
 	"github.com/comsma/gw-plantsale-search/ui"
+	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 )
 
-func Start(db *sql.DB, syncer *indexer.Syncer, idx *search.Index) error {
+func Start(db *pgx.Conn, syncer *indexer.Syncer) error {
 	e := echo.New()
 
 	sessionManager := scs.New()
@@ -40,11 +37,7 @@ func Start(db *sql.DB, syncer *indexer.Syncer, idx *search.Index) error {
 
 	e.StaticFS("/static", staticFS)
 
-	if err := syncer.Build(context.Background()); err != nil {
-		log.Printf("server: initial index build failed: %v", err)
-	}
-
-	h := &Handler{queries: models.New(db), syncer: syncer, search: idx, session: sessionManager}
+	h := &Handler{queries: models.New(db), syncer: syncer}
 	e.GET("/", h.Home)
 	e.GET("/plants", h.PlantList)
 	e.GET("/plants/:taxon", h.PlantDetail)

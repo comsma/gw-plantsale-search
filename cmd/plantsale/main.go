@@ -3,23 +3,26 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 	"strconv"
 	"strings"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/pressly/goose/v3"
-	"github.com/urfave/cli/v2"
-
-	"github.com/comsma/gw-plantsale-search/internal/inatrualist"
 	"github.com/comsma/gw-plantsale-search/internal/indexer"
-	_ "github.com/comsma/gw-plantsale-search/internal/migrations"
+	"github.com/comsma/gw-plantsale-search/internal/migrations"
 	"github.com/comsma/gw-plantsale-search/internal/models"
 	"github.com/comsma/gw-plantsale-search/internal/plants"
-	"github.com/comsma/gw-plantsale-search/internal/search"
 	"github.com/comsma/gw-plantsale-search/internal/server"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
@@ -62,20 +65,29 @@ func main() {
 	}
 }
 
-func openDB() (*sql.DB, error) {
+func openDB() (*pgx.Conn, error) {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		return nil, fmt.Errorf("DATABASE_URL not set")
 	}
-	db, err := sql.Open("mysql", dsn)
+	conn, err := pgx.Connect(context.Background(), dsn)
 	if err != nil {
-		return nil, fmt.Errorf("open db: %w", err)
+		return nil, err
 	}
-	if err := db.Ping(); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("ping db: %w", err)
+	return conn, nil
+}
+
+func openSQLDB() (*sql.DB, error) {
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		return nil, fmt.Errorf("DATABASE_URL not set")
 	}
-	return db, nil
+	config, err := pgx.ParseConfig(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("migrate: parse config: %w", err)
+	}
+
+	return stdlib.OpenDB(*config), nil
 }
 
 // ── serve ────────────────────────────────────────────────────────────────────
@@ -85,61 +97,58 @@ func runServe(_ *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close(context.Background())
 
-	idx, err := search.New()
-	if err != nil {
-		return fmt.Errorf("search index: %w", err)
-	}
-
-	syncer := indexer.New(models.New(db), idx)
-	return server.Start(db, syncer, idx)
+	syncer := indexer.New(models.New(db))
+	return server.Start(db, syncer)
 }
 
 // ── migrate ──────────────────────────────────────────────────────────────────
 
 func runMigrateUp(_ *cli.Context) error {
-	db, err := openDB()
+	db, err := openSQLDB()
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-	goose.SetDialect("mysql")
+	goose.SetBaseFS(migrations.FS)
+	goose.SetDialect("postgres")
 	return goose.Up(db, ".")
 }
 
 func runMigrateDown(_ *cli.Context) error {
-	db, err := openDB()
+	db, err := openSQLDB()
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-	goose.SetDialect("mysql")
+	goose.SetBaseFS(migrations.FS)
+	goose.SetDialect("postgres")
 	return goose.Down(db, ".")
 }
 
 func runMigrateStatus(_ *cli.Context) error {
-	db, err := openDB()
+	db, err := openSQLDB()
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-	goose.SetDialect("mysql")
+	goose.SetBaseFS(migrations.FS)
+	goose.SetDialect("postgres")
 	return goose.Status(db, ".")
 }
 
 // ── ingest ───────────────────────────────────────────────────────────────────
 
 func ingestPlants(cliCtx *cli.Context) error {
-
 	db, err := openDB()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	ctx := context.Background()
+	defer db.Close(ctx)
 
 	q := models.New(db)
-	ctx := context.Background()
 	var created, skipped, inatOk, inatFail int
 
 	plantList, err := plants.LoadPlants(cliCtx.String("plant-list"))
@@ -153,15 +162,15 @@ func ingestPlants(cliCtx *cli.Context) error {
 		err := q.CreatePlant(ctx, models.CreatePlantParams{
 			ID:                 id,
 			Common:             plant.Common,
-			Scientific:         sql.NullString{String: plant.Scientific, Valid: plant.Scientific != ""},
-			InatrualistTaxonID: sql.NullString{String: id, Valid: true},
-			Section:            sql.NullString{String: plant.Section, Valid: plant.Section != ""},
-			Color:              sql.NullString{String: plant.Color, Valid: plant.Color != ""},
-			Bloom:              sql.NullString{String: plant.Bloom, Valid: plant.Bloom != ""},
-			Height:             sql.NullString{String: plant.Height, Valid: plant.Height != ""},
-			HeightSort:         sql.NullString{String: fmt.Sprintf("%g", plant.HeightSort), Valid: true},
-			Sun:                sql.NullString{String: plant.Sun, Valid: plant.Sun != ""},
-			Water:              sql.NullString{String: plant.Soil, Valid: plant.Soil != ""},
+			Scientific:         pgtype.Text{String: plant.Scientific, Valid: plant.Scientific != ""},
+			InatrualistTaxonID: pgtype.Text{String: id, Valid: true},
+			Section:            pgtype.Text{String: plant.Section, Valid: plant.Section != ""},
+			Color:              pgtype.Text{String: plant.Color, Valid: plant.Color != ""},
+			Bloom:              pgtype.Text{String: plant.Bloom, Valid: plant.Bloom != ""},
+			Height:             pgtype.Text{String: plant.Height, Valid: plant.Height != ""},
+			HeightSort:         pgtype.Text{String: fmt.Sprintf("%g", plant.HeightSort), Valid: true},
+			Sun:                pgtype.Text{String: plant.Sun, Valid: plant.Sun != ""},
+			Water:              pgtype.Text{String: plant.Soil, Valid: plant.Soil != ""},
 			Price:              parsePrice(plant.Price),
 			Available:          true,
 		})
@@ -173,38 +182,40 @@ func ingestPlants(cliCtx *cli.Context) error {
 			return fmt.Errorf("create plant %q: %w", plant.Common, err)
 		}
 		created++
-
-		details, err := inatrualist.GetPlantDetails(plant.Taxon)
-		if err != nil {
-			log.Printf("inat failed for %q (taxon %d): %v", plant.Common, plant.Taxon, err)
-			inatFail++
-			continue
-		}
-		if err := q.UpsertInatrualistData(ctx, models.UpsertInatrualistDataParams{
-			PlantID:     id,
-			Summary:     details.Summary,
-			ImageUrl:    details.ImageUrl,
-			Attribution: details.ImageAttribution,
-		}); err != nil {
-			log.Printf("upsert inat failed for %q: %v", plant.Common, err)
-			inatFail++
-			continue
-		}
-		inatOk++
 	}
 
 	fmt.Printf("done: %d created, %d skipped, %d inat ok, %d inat failed\n", created, skipped, inatOk, inatFail)
 	return nil
 }
 
-func parsePrice(s string) string {
+func parsePrice(s string) pgtype.Numeric {
 	s = strings.TrimPrefix(s, "$")
 	if i := strings.Index(s, "/"); i >= 0 {
 		s = s[:i]
 	}
-	return strings.TrimSpace(s)
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return pgtype.Numeric{Valid: false}
+	}
+
+	var intPart, fracPart string
+	var exp int32
+	if dot := strings.Index(s, "."); dot >= 0 {
+		intPart = s[:dot]
+		fracPart = s[dot+1:]
+		exp = -int32(len(fracPart))
+	} else {
+		intPart = s
+	}
+
+	n := new(big.Int)
+	if _, ok := n.SetString(intPart+fracPart, 10); !ok {
+		return pgtype.Numeric{Valid: false}
+	}
+	return pgtype.Numeric{Int: n, Exp: exp, Valid: true}
 }
 
 func isDuplicateKey(err error) bool {
-	return strings.Contains(err.Error(), "Duplicate entry") || strings.Contains(err.Error(), "1062")
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }

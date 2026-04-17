@@ -7,7 +7,8 @@ package models
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createPlant = `-- name: CreatePlant :exec
@@ -26,40 +27,40 @@ INSERT INTO plants (
     price,
     available
 ) VALUES (
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    $10,
+    $11,
+    $12,
+    $13
 )
 `
 
 type CreatePlantParams struct {
-	ID                 string         `json:"id"`
-	Common             string         `json:"common"`
-	Scientific         sql.NullString `json:"scientific"`
-	InatrualistTaxonID sql.NullString `json:"inatrualist_taxon_id"`
-	Section            sql.NullString `json:"section"`
-	Color              sql.NullString `json:"color"`
-	Bloom              sql.NullString `json:"bloom"`
-	Height             sql.NullString `json:"height"`
-	HeightSort         sql.NullString `json:"height_sort"`
-	Sun                sql.NullString `json:"sun"`
-	Water              sql.NullString `json:"water"`
-	Price              string         `json:"price"`
-	Available          bool           `json:"available"`
+	ID                 string
+	Common             string
+	Scientific         pgtype.Text
+	InatrualistTaxonID pgtype.Text
+	Section            pgtype.Text
+	Color              pgtype.Text
+	Bloom              pgtype.Text
+	Height             pgtype.Text
+	HeightSort         pgtype.Text
+	Sun                pgtype.Text
+	Water              pgtype.Text
+	Price              pgtype.Numeric
+	Available          bool
 }
 
 func (q *Queries) CreatePlant(ctx context.Context, arg CreatePlantParams) error {
-	_, err := q.db.ExecContext(ctx, createPlant,
+	_, err := q.db.Exec(ctx, createPlant,
 		arg.ID,
 		arg.Common,
 		arg.Scientific,
@@ -78,11 +79,11 @@ func (q *Queries) CreatePlant(ctx context.Context, arg CreatePlantParams) error 
 }
 
 const getAllPlants = `-- name: GetAllPlants :many
-SELECT id, common, scientific, inatrualist_taxon_id, section, color, bloom, height, height_sort, sun, water, price, available FROM plants ORDER BY common
+SELECT id, common, scientific, inatrualist_taxon_id, section, color, bloom, height, height_sort, sun, water, price, available, fts_common FROM plants ORDER BY common
 `
 
 func (q *Queries) GetAllPlants(ctx context.Context) ([]Plant, error) {
-	rows, err := q.db.QueryContext(ctx, getAllPlants)
+	rows, err := q.db.Query(ctx, getAllPlants)
 	if err != nil {
 		return nil, err
 	}
@@ -104,13 +105,11 @@ func (q *Queries) GetAllPlants(ctx context.Context) ([]Plant, error) {
 			&i.Water,
 			&i.Price,
 			&i.Available,
+			&i.FtsCommon,
 		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -142,26 +141,26 @@ ORDER BY p.common
 `
 
 type GetAllPlantsWithInatrualistRow struct {
-	ID                 string         `json:"id"`
-	Common             string         `json:"common"`
-	Scientific         sql.NullString `json:"scientific"`
-	InatrualistTaxonID sql.NullString `json:"inatrualist_taxon_id"`
-	Section            sql.NullString `json:"section"`
-	Color              sql.NullString `json:"color"`
-	Bloom              sql.NullString `json:"bloom"`
-	Height             sql.NullString `json:"height"`
-	HeightSort         sql.NullString `json:"height_sort"`
-	Sun                sql.NullString `json:"sun"`
-	Water              sql.NullString `json:"water"`
-	Price              string         `json:"price"`
-	Available          bool           `json:"available"`
-	Summary            sql.NullString `json:"summary"`
-	ImageUrl           sql.NullString `json:"image_url"`
-	Attribution        sql.NullString `json:"attribution"`
+	ID                 string
+	Common             string
+	Scientific         pgtype.Text
+	InatrualistTaxonID pgtype.Text
+	Section            pgtype.Text
+	Color              pgtype.Text
+	Bloom              pgtype.Text
+	Height             pgtype.Text
+	HeightSort         pgtype.Text
+	Sun                pgtype.Text
+	Water              pgtype.Text
+	Price              pgtype.Numeric
+	Available          bool
+	Summary            pgtype.Text
+	ImageUrl           pgtype.Text
+	Attribution        pgtype.Text
 }
 
 func (q *Queries) GetAllPlantsWithInatrualist(ctx context.Context) ([]GetAllPlantsWithInatrualistRow, error) {
-	rows, err := q.db.QueryContext(ctx, getAllPlantsWithInatrualist)
+	rows, err := q.db.Query(ctx, getAllPlantsWithInatrualist)
 	if err != nil {
 		return nil, err
 	}
@@ -191,9 +190,6 @@ func (q *Queries) GetAllPlantsWithInatrualist(ctx context.Context) ([]GetAllPlan
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -206,22 +202,19 @@ WHERE section IS NOT NULL AND section != '' AND available = true
 ORDER BY section
 `
 
-func (q *Queries) GetDistinctSections(ctx context.Context) ([]sql.NullString, error) {
-	rows, err := q.db.QueryContext(ctx, getDistinctSections)
+func (q *Queries) GetDistinctSections(ctx context.Context) ([]pgtype.Text, error) {
+	rows, err := q.db.Query(ctx, getDistinctSections)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []sql.NullString
+	var items []pgtype.Text
 	for rows.Next() {
-		var section sql.NullString
+		var section pgtype.Text
 		if err := rows.Scan(&section); err != nil {
 			return nil, err
 		}
 		items = append(items, section)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -235,22 +228,19 @@ WHERE sun IS NOT NULL AND sun != '' AND available = true
 ORDER BY sun
 `
 
-func (q *Queries) GetDistinctSuns(ctx context.Context) ([]sql.NullString, error) {
-	rows, err := q.db.QueryContext(ctx, getDistinctSuns)
+func (q *Queries) GetDistinctSuns(ctx context.Context) ([]pgtype.Text, error) {
+	rows, err := q.db.Query(ctx, getDistinctSuns)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []sql.NullString
+	var items []pgtype.Text
 	for rows.Next() {
-		var sun sql.NullString
+		var sun pgtype.Text
 		if err := rows.Scan(&sun); err != nil {
 			return nil, err
 		}
 		items = append(items, sun)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -264,22 +254,19 @@ WHERE water IS NOT NULL AND water != '' AND available = true
 ORDER BY water
 `
 
-func (q *Queries) GetDistinctWaters(ctx context.Context) ([]sql.NullString, error) {
-	rows, err := q.db.QueryContext(ctx, getDistinctWaters)
+func (q *Queries) GetDistinctWaters(ctx context.Context) ([]pgtype.Text, error) {
+	rows, err := q.db.Query(ctx, getDistinctWaters)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []sql.NullString
+	var items []pgtype.Text
 	for rows.Next() {
-		var water sql.NullString
+		var water pgtype.Text
 		if err := rows.Scan(&water); err != nil {
 			return nil, err
 		}
 		items = append(items, water)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -307,31 +294,31 @@ SELECT
     i.attribution
 FROM plants p
 LEFT JOIN inatrualist i ON i.plant_id = p.id
-WHERE p.id = ?
+WHERE p.id = $1
 LIMIT 1
 `
 
 type GetPlantWithInatrualistRow struct {
-	ID                 string         `json:"id"`
-	Common             string         `json:"common"`
-	Scientific         sql.NullString `json:"scientific"`
-	InatrualistTaxonID sql.NullString `json:"inatrualist_taxon_id"`
-	Section            sql.NullString `json:"section"`
-	Color              sql.NullString `json:"color"`
-	Bloom              sql.NullString `json:"bloom"`
-	Height             sql.NullString `json:"height"`
-	HeightSort         sql.NullString `json:"height_sort"`
-	Sun                sql.NullString `json:"sun"`
-	Water              sql.NullString `json:"water"`
-	Price              string         `json:"price"`
-	Available          bool           `json:"available"`
-	Summary            sql.NullString `json:"summary"`
-	ImageUrl           sql.NullString `json:"image_url"`
-	Attribution        sql.NullString `json:"attribution"`
+	ID                 string
+	Common             string
+	Scientific         pgtype.Text
+	InatrualistTaxonID pgtype.Text
+	Section            pgtype.Text
+	Color              pgtype.Text
+	Bloom              pgtype.Text
+	Height             pgtype.Text
+	HeightSort         pgtype.Text
+	Sun                pgtype.Text
+	Water              pgtype.Text
+	Price              pgtype.Numeric
+	Available          bool
+	Summary            pgtype.Text
+	ImageUrl           pgtype.Text
+	Attribution        pgtype.Text
 }
 
 func (q *Queries) GetPlantWithInatrualist(ctx context.Context, id string) (GetPlantWithInatrualistRow, error) {
-	row := q.db.QueryRowContext(ctx, getPlantWithInatrualist, id)
+	row := q.db.QueryRow(ctx, getPlantWithInatrualist, id)
 	var i GetPlantWithInatrualistRow
 	err := row.Scan(
 		&i.ID,
@@ -356,93 +343,71 @@ func (q *Queries) GetPlantWithInatrualist(ctx context.Context, id string) (GetPl
 
 const searchPlants = `-- name: SearchPlants :many
 SELECT
-    p.id,
-    p.common,
-    p.scientific,
-    p.inatrualist_taxon_id,
-    p.section,
-    p.color,
-    p.bloom,
-    p.height,
-    p.height_sort,
-    p.sun,
-    p.water,
-    p.price,
-    p.available,
-    i.image_url
-FROM plants p
-LEFT JOIN inatrualist i ON i.plant_id = p.id
-WHERE p.available = true
+    id,
+    common,
+    scientific,
+    inatrualist_taxon_id,
+    section,
+    color,
+    bloom,
+    height,
+    height_sort,
+    sun,
+    water,
+    price,
+    available,
+    image_url
+FROM plant_search_view
+WHERE available = true
   AND (
-    ? = ''
-    OR MATCH(p.common, p.scientific) AGAINST (? IN NATURAL LANGUAGE MODE)
-    OR MATCH(i.summary) AGAINST (? IN NATURAL LANGUAGE MODE)
+    $1::text = ''
+    OR search_vector @@ websearch_to_tsquery('english', $1::text)
   )
-  AND (? = '' OR p.section = ?)
-  AND (?   = '' OR p.color   = ?)
-  AND (?     = '' OR p.sun     = ?)
-  AND (?   = '' OR p.water   = ?)
+  AND ($2::text = '' OR section = $2::text)
+  AND ($3::text   = '' OR color   = $3::text)
+  AND ($4::text     = '' OR sun     = $4::text)
+  AND ($5::text   = '' OR water   = $5::text)
 ORDER BY
-    CASE ?
-        WHEN 'common' THEN p.common
-        WHEN 'height' THEN p.height_sort
-        WHEN 'price' THEN p.price
-        ELSE p.common
-    END ASC,
-    CASE WHEN ? = '' THEN 0 ELSE (
-        (MATCH(p.common, p.scientific) AGAINST (? IN NATURAL LANGUAGE MODE))+
-        (MATCH(i.summary) AGAINST (? IN NATURAL LANGUAGE MODE))
-    ) END ASC,
-    p.common ASC
+    CASE WHEN $1::text != '' THEN ts_rank(search_vector, websearch_to_tsquery('english', $1::text)) END DESC NULLS LAST,
+    CASE WHEN $6::text = 'height' THEN height_sort END ASC NULLS LAST,
+    CASE WHEN $6::text = 'price'  THEN price END ASC NULLS LAST,
+    common ASC
 `
 
 type SearchPlantsParams struct {
-	Query      string         `json:"query"`
-	Query_2    string         `json:"query_2"`
-	Query_3    string         `json:"query_3"`
-	Section    sql.NullString `json:"section"`
-	Color      sql.NullString `json:"color"`
-	Sun        sql.NullString `json:"sun"`
-	Water      sql.NullString `json:"water"`
-	SortColumn interface{}    `json:"sort_column"`
-	Query_5    string         `json:"query_5"`
-	Query_6    string         `json:"query_6"`
+	Query      string
+	Section    string
+	Color      string
+	Sun        string
+	Water      string
+	SortColumn string
 }
 
 type SearchPlantsRow struct {
-	ID                 string         `json:"id"`
-	Common             string         `json:"common"`
-	Scientific         sql.NullString `json:"scientific"`
-	InatrualistTaxonID sql.NullString `json:"inatrualist_taxon_id"`
-	Section            sql.NullString `json:"section"`
-	Color              sql.NullString `json:"color"`
-	Bloom              sql.NullString `json:"bloom"`
-	Height             sql.NullString `json:"height"`
-	HeightSort         sql.NullString `json:"height_sort"`
-	Sun                sql.NullString `json:"sun"`
-	Water              sql.NullString `json:"water"`
-	Price              string         `json:"price"`
-	Available          bool           `json:"available"`
-	ImageUrl           sql.NullString `json:"image_url"`
+	ID                 string
+	Common             string
+	Scientific         pgtype.Text
+	InatrualistTaxonID pgtype.Text
+	Section            pgtype.Text
+	Color              pgtype.Text
+	Bloom              pgtype.Text
+	Height             pgtype.Text
+	HeightSort         pgtype.Text
+	Sun                pgtype.Text
+	Water              pgtype.Text
+	Price              pgtype.Numeric
+	Available          bool
+	ImageUrl           pgtype.Text
 }
 
 func (q *Queries) SearchPlants(ctx context.Context, arg SearchPlantsParams) ([]SearchPlantsRow, error) {
-	rows, err := q.db.QueryContext(ctx, searchPlants,
+	rows, err := q.db.Query(ctx, searchPlants,
 		arg.Query,
-		arg.Query_2,
-		arg.Query_3,
-		arg.Section,
 		arg.Section,
 		arg.Color,
-		arg.Color,
 		arg.Sun,
-		arg.Sun,
-		arg.Water,
 		arg.Water,
 		arg.SortColumn,
-		arg.Query,
-		arg.Query_5,
-		arg.Query_6,
 	)
 	if err != nil {
 		return nil, err
@@ -471,9 +436,6 @@ func (q *Queries) SearchPlants(ctx context.Context, arg SearchPlantsParams) ([]S
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -488,27 +450,27 @@ INSERT INTO inatrualist (
     attribution,
     last_updated
 ) VALUES (
-    ?,
-    ?,
-    ?,
-    ?,
+    $1,
+    $2,
+    $3,
+    $4,
     NOW()
-) ON DUPLICATE KEY UPDATE
-    summary      = VALUES(summary),
-    image_url    = VALUES(image_url),
-    attribution  = VALUES(attribution),
+) ON CONFLICT (plant_id) DO UPDATE SET
+    summary      = EXCLUDED.summary,
+    image_url    = EXCLUDED.image_url,
+    attribution  = EXCLUDED.attribution,
     last_updated = NOW()
 `
 
 type UpsertInatrualistDataParams struct {
-	PlantID     string `json:"plant_id"`
-	Summary     string `json:"summary"`
-	ImageUrl    string `json:"image_url"`
-	Attribution string `json:"attribution"`
+	PlantID     string
+	Summary     string
+	ImageUrl    string
+	Attribution string
 }
 
 func (q *Queries) UpsertInatrualistData(ctx context.Context, arg UpsertInatrualistDataParams) error {
-	_, err := q.db.ExecContext(ctx, upsertInatrualistData,
+	_, err := q.db.Exec(ctx, upsertInatrualistData,
 		arg.PlantID,
 		arg.Summary,
 		arg.ImageUrl,

@@ -9,7 +9,6 @@ import (
 
 	"github.com/comsma/gw-plantsale-search/internal/inatrualist"
 	"github.com/comsma/gw-plantsale-search/internal/models"
-	"github.com/comsma/gw-plantsale-search/internal/search"
 )
 
 // Syncer fetches iNaturalist data for all plants and keeps the search index
@@ -17,49 +16,11 @@ import (
 // sync is already running are silently dropped.
 type Syncer struct {
 	queries *models.Queries
-	search  *search.Index
 	running atomic.Bool
 }
 
-func New(queries *models.Queries, idx *search.Index) *Syncer {
-	return &Syncer{queries: queries, search: idx}
-}
-
-// Build performs an initial synchronous population of the search index from
-// the database. Call this once at startup before serving requests.
-func (s *Syncer) Build(ctx context.Context) error {
-	rows, err := s.queries.GetAllPlantsWithInatrualist(ctx)
-	if err != nil {
-		return fmt.Errorf("get plants: %w", err)
-	}
-
-	docs := make([]search.PlantDoc, 0, len(rows))
-	for _, r := range rows {
-		if !r.Available {
-			continue
-		}
-		docs = append(docs, search.PlantDoc{
-			ID:         r.ID,
-			Common:     r.Common,
-			Scientific: r.Scientific.String,
-			Section:    r.Section.String,
-			Color:      r.Color.String,
-			Bloom:      r.Bloom.String,
-			Height:     r.Height.String,
-			HeightSort: r.HeightSort.String,
-			Sun:        r.Sun.String,
-			Water:      r.Water.String,
-			Price:      r.Price,
-			Summary:    r.Summary.String,
-			ImageURL:   r.ImageUrl.String,
-		})
-	}
-
-	if err := s.search.IndexBatch(docs); err != nil {
-		return fmt.Errorf("index batch: %w", err)
-	}
-	log.Printf("indexer: initial index built — %d plants", len(docs))
-	return nil
+func New(queries *models.Queries) *Syncer {
+	return &Syncer{queries: queries}
 }
 
 // Trigger starts a background iNaturalist sync. If one is already running it
@@ -117,37 +78,9 @@ func (s *Syncer) sync() error {
 			continue
 		}
 
-		// Re-index the plant with updated iNaturalist data.
-		row, err := s.queries.GetPlantWithInatrualist(ctx, p.ID)
-		if err != nil {
-			log.Printf("indexer: re-fetch failed for %q: %v", p.Common, err)
-		} else if row.Available {
-			if err := s.search.IndexPlant(rowToDoc(row)); err != nil {
-				log.Printf("indexer: re-index failed for %q: %v", p.Common, err)
-			}
-		}
-
 		ok++
 	}
 
 	log.Printf("indexer: sync complete — %d ok, %d failed", ok, failed)
 	return nil
-}
-
-func rowToDoc(r models.GetPlantWithInatrualistRow) search.PlantDoc {
-	return search.PlantDoc{
-		ID:         r.ID,
-		Common:     r.Common,
-		Scientific: r.Scientific.String,
-		Section:    r.Section.String,
-		Color:      r.Color.String,
-		Bloom:      r.Bloom.String,
-		Height:     r.Height.String,
-		HeightSort: r.HeightSort.String,
-		Sun:        r.Sun.String,
-		Water:      r.Water.String,
-		Price:      r.Price,
-		Summary:    r.Summary.String,
-		ImageURL:   r.ImageUrl.String,
-	}
 }
