@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -220,6 +221,34 @@ func (h *Handler) PlantDetail(c *echo.Context) error {
 		ImageURL:         row.ImageUrl.String,
 		ImageAttribution: row.Attribution.String,
 	})
+}
+
+func customHTTPErrorHandler(c *echo.Context, err error) {
+	if resp, uErr := echo.UnwrapResponse(c.Response()); uErr == nil {
+		if resp.Committed {
+			return // response has been already sent to the client by handler or some middleware
+		}
+	}
+
+	code := http.StatusInternalServerError
+	var sc echo.HTTPStatusCoder
+	if errors.As(err, &sc) { // find error in an error chain that implements HTTPStatusCoder
+		if tmp := sc.StatusCode(); tmp != 0 {
+			code = tmp
+		}
+	}
+	data := struct{ Error string }{Error: err.Error()}
+
+	var cErr error
+	if c.Request().Method == http.MethodHead {
+		cErr = c.NoContent(code)
+	} else {
+		errorPage := fmt.Sprintf("pages/%d.gohtml", code)
+		cErr = c.Render(http.StatusOK, errorPage, data)
+	}
+	if cErr != nil {
+		c.Logger().Error("failed to send error page to client", "error", errors.Join(err, cErr))
+	}
 }
 
 func unwrapTextSlice(ts []pgtype.Text) []string {

@@ -9,12 +9,12 @@ import (
 	"github.com/comsma/gw-plantsale-search/internal/indexer"
 	"github.com/comsma/gw-plantsale-search/internal/models"
 	"github.com/comsma/gw-plantsale-search/ui"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 )
 
-func Start(db *pgx.Conn, syncer *indexer.Syncer) error {
+func Start(db *pgxpool.Pool, syncer *indexer.Syncer) error {
 	e := echo.New()
 
 	sessionManager := scs.New()
@@ -35,6 +35,7 @@ func Start(db *pgx.Conn, syncer *indexer.Syncer) error {
 	e.Use(middleware.Gzip())
 	e.Use(middleware.RequestLogger())
 	e.Use(LoadAndSave(sessionManager))
+	e.HTTPErrorHandler = customHTTPErrorHandler
 
 	e.StaticFS("/static", staticFS)
 

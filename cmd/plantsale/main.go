@@ -19,6 +19,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
@@ -65,16 +66,16 @@ func main() {
 	}
 }
 
-func openDB() (*pgx.Conn, error) {
+func openDB() (*pgxpool.Pool, error) {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		return nil, fmt.Errorf("DATABASE_URL not set")
 	}
-	conn, err := pgx.Connect(context.Background(), dsn)
+	pool, err := pgxpool.New(context.Background(), dsn)
 	if err != nil {
 		return nil, err
 	}
-	return conn, nil
+	return pool, nil
 }
 
 func openSQLDB() (*sql.DB, error) {
@@ -97,7 +98,7 @@ func runServe(_ *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close(context.Background())
+	defer db.Close()
 
 	syncer := indexer.New(models.New(db))
 	return server.Start(db, syncer)
@@ -145,8 +146,8 @@ func ingestPlants(cliCtx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	defer db.Close()
 	ctx := context.Background()
-	defer db.Close(ctx)
 
 	q := models.New(db)
 	var created, skipped, inatOk, inatFail int
