@@ -33,6 +33,7 @@ func Start(db *pgx.Conn, syncer *indexer.Syncer) error {
 	e.Renderer = tmpl
 
 	e.Use(middleware.Gzip())
+	e.Use(middleware.RequestLogger())
 	e.Use(LoadAndSave(sessionManager))
 
 	e.StaticFS("/static", staticFS)
