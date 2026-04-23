@@ -2,6 +2,7 @@
   <a
     class="plant-card text-left bg-white rounded-[18px] border border-line shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
     href="/plants/{{ .Taxon }}"
+    hx-boost="true"
   >
     <!-- Image -->
     <div
@@ -35,18 +36,15 @@
           </p>
         </div>
         {{ if .IsFavorited }}
-          <div class="text-stem">
+          <div
+            class="shrink-0 ml-2 bg-stem rounded-full w-8 h-8 flex items-center justify-center text-white"
+          >
             <span class="sr-only">Added to Favorites </span>
             <svg
               class="w-5 h-5"
               width="100%"
               height="100%"
               viewBox="0 0 352 290"
-              version="1.1"
-              xmlns="http://www.w3.org/2000/svg"
-              xmlns:xlink="http://www.w3.org/1999/xlink"
-              xml:space="preserve"
-              xmlns:serif="http://www.serif.com/"
               style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"
             >
               <path

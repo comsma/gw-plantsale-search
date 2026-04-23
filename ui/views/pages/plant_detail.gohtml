@@ -47,21 +47,34 @@
           <p class="italic text-[#8a858b] text-lg mb-4">
             {{ .Plant.Scientific }}
           </p>
+        </div>
 
-          <div class="flex flex-wrap gap-2">
-            <span
-              class="inline-flex items-center bg-stem/10 text-stem border border-stem/20 rounded-full px-4 py-1.5 text-[0.85rem] font-bold"
+        {{/* Action Buttons */}}
+        <div class="flex gap-3 flex-wrap mb-6">
+          {{ template "favorite_button" . }}
+          {{ if .Plant.InatURL }}
+            <a
+              href="{{ .Plant.InatURL }}"
+              target="_blank"
+              rel="noopener"
+              class="btn btn-outline btn-primary"
             >
-              {{ .Plant.Section }}
-            </span>
-            {{ if .Plant.Color }}
-              <span
-                class="inline-flex items-center bg-elderberry/10 text-elderberry border border-elderberry/20 rounded-full px-4 py-1.5 text-[0.85rem] font-bold"
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                {{ .Plant.Color }}
-              </span>
-            {{ end }}
-          </div>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+              View on iNaturalist
+            </a>
+          {{ end }}
         </div>
 
         <!-- Plant characteristics -->
@@ -76,6 +89,32 @@
           <div
             class="grid grid-cols-3 gap-4 max-md:grid-cols-2 max-sm:grid-cols-1"
           >
+            <div
+              class="bg-gradient-to-br from-dragonfly to-soft rounded-[16px] p-4 border border-line/50"
+            >
+              <div
+                class="text-[0.7rem] uppercase tracking-wider text-[#918a92] mb-2 font-bold"
+              >
+                Group
+              </div>
+              <div class="font-black text-chickadee text-[1rem]">
+                {{ .Plant.Section }}
+              </div>
+            </div>
+            {{ if .Plant.Color }}
+              <div
+                class="bg-gradient-to-br from-dragonfly to-soft rounded-[16px] p-4 border border-line/50"
+              >
+                <div
+                  class="text-[0.7rem] uppercase tracking-wider text-[#918a92] mb-2 font-bold"
+                >
+                  Color
+                </div>
+                <div class="font-black text-chickadee text-[1rem]">
+                  {{ .Plant.Color }}
+                </div>
+              </div>
+            {{ end }}
             <div
               class="bg-gradient-to-br from-dragonfly to-soft rounded-[16px] p-4 border border-line/50"
             >
@@ -154,35 +193,6 @@
             </p>
           </div>
         {{ end }}
-
-
-        <!-- Action buttons -->
-        <div class="flex gap-3 flex-wrap mt-auto pt-4">
-          {{ template "favorite_button" . }}
-          {{ if .Plant.InatURL }}
-            <a
-              href="{{ .Plant.InatURL }}"
-              target="_blank"
-              rel="noopener"
-              class="btn btn-outline btn-primary"
-            >
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
-              </svg>
-              View on iNaturalist
-            </a>
-          {{ end }}
-        </div>
       </div>
     </div>
   </div>

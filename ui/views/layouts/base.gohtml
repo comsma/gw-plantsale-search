@@ -12,7 +12,6 @@
         name="description"
         content="Answer a few quick questions to find native plants from the Wild Ones Gibson Woods plant sale on May 2, 2026."
       />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
       <link
         rel="preconnect"
         href="https://inaturalist-open-data.s3.amazonaws.com"
@@ -35,6 +34,7 @@
     </head>
     <body class="font-lato bg-dragonfly text-chickadee min-h-screen">
       {{ template "content" . }}
+      {{ template "footer" . }}
     </body>
   </html>
 {{ end }}
