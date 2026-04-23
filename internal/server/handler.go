@@ -23,36 +23,37 @@ type Handler struct {
 
 // PlantView maps models.Plant to template-compatible field names.
 type PlantView struct {
-	Taxon      string
-	Common     string
-	Scientific string
-	Section    string
-	Color      string
-	Bloom      string
-	Height     string
-	Sun        string
-	Soil       string
-	Price      string
-	Available  bool
-	InatURL    string
-	ImageURL   string
+	Taxon       string
+	Common      string
+	Scientific  string
+	Section     string
+	Color       string
+	Bloom       string
+	Height      string
+	Sun         string
+	Soil        string
+	Price       string
+	Available   bool
+	InatURL     string
+	ImageURL    string
+	IsFavorited bool
 }
 
 func toPlantViewFromSearchRow(r models.SearchPlantsRow) PlantView {
 	return PlantView{
-		Taxon:      r.ID,
-		Common:     r.Common,
-		Scientific: r.Scientific.String,
-		Section:    r.Section.String,
-		Color:      r.Color.String,
-		Bloom:      r.Bloom.String,
-		Height:     r.Height.String,
-		Sun:        r.Sun.String,
-		Soil:       r.Water.String,
-		ImageURL:   r.ImageUrl.String,
-		Price:      formatPrice(r.Price),
-		InatURL:    inatURL(r.InatrualistTaxonID.String),
-		Available:  r.Available,
+		Taxon:       r.ID,
+		Common:      r.Common,
+		Scientific:  r.Scientific.String,
+		Section:     r.Section.String,
+		Color:       r.Color.String,
+		Bloom:       r.Bloom.String,
+		Height:      r.Height.String,
+		Sun:         r.Sun.String,
+		Soil:        r.Water.String,
+		ImageURL:    r.ImageUrl.String,
+		Price:       formatPrice(r.Price),
+		InatURL:     inatURL(r.InatrualistTaxonID.String),
+		IsFavorited: r.IsFavorited,
 	}
 }
 func toPlantViewFromRow(r models.GetPlantWithInatrualistRow) PlantView {
@@ -99,6 +100,7 @@ type PlantDetailData struct {
 	Summary          string
 	ImageURL         string
 	ImageAttribution string
+	IsFavorited      bool
 }
 
 func (h *Handler) Home(c *echo.Context) error {
@@ -128,6 +130,7 @@ func (h *Handler) PlantList(c *echo.Context) error {
 	}
 
 	plants, err := h.queries.SearchPlants(ctx, models.SearchPlantsParams{
+		UserID:     GetVisitorID(c),
 		Query:      query,
 		Section:    section,
 		Color:      color,
@@ -207,22 +210,106 @@ func (h *Handler) TriggerInatResync(c *echo.Context) error {
 }
 
 func (h *Handler) PlantDetail(c *echo.Context) error {
-	ctx := context.Background()
 	id := c.Param("taxon")
 
-	row, err := h.queries.GetPlantWithInatrualist(ctx, id)
+	visitorID := GetVisitorID(c)
+
+	row, err := h.queries.GetPlantWithInatrualist(c.Request().Context(), models.GetPlantWithInatrualistParams{UserID: visitorID, ID: id})
 	if err != nil {
 		return echo.ErrNotFound
 	}
 
-	return c.Render(http.StatusOK, "partials/plant_detail.gohtml", PlantDetailData{
+	return c.Render(http.StatusOK, "pages/plant_detail.gohtml", PlantDetailData{
 		Plant:            toPlantViewFromRow(row),
 		Summary:          row.Summary.String,
 		ImageURL:         row.ImageUrl.String,
 		ImageAttribution: row.Attribution.String,
+		IsFavorited:      row.IsFavorited,
 	})
 }
 
+func (h *Handler) FavoritePlant(c *echo.Context) error {
+	visitorID := GetVisitorID(c)
+
+	ctx := context.Background()
+	id := c.Param("taxon")
+
+	err := h.queries.CreateFavoritePlant(ctx, models.CreateFavoritePlantParams{
+		PlantID: id,
+		UserID:  visitorID,
+	})
+	if err != nil {
+		return echo.ErrInternalServerError
+	}
+
+	row, err := h.queries.GetPlantWithInatrualist(ctx, models.GetPlantWithInatrualistParams{UserID: visitorID, ID: id})
+	if err != nil {
+		return echo.ErrNotFound
+	}
+	return c.Render(http.StatusOK, "partials/favorite_button.gohtml", PlantDetailData{
+		Plant:            toPlantViewFromRow(row),
+		Summary:          row.Summary.String,
+		ImageURL:         row.ImageUrl.String,
+		ImageAttribution: row.Attribution.String,
+		IsFavorited:      row.IsFavorited,
+	})
+
+}
+
+func (h *Handler) UnfavoritePlant(c *echo.Context) error {
+	visitorID := GetVisitorID(c)
+
+	err := h.queries.DeleteFavoritePlant(c.Request().Context(), models.DeleteFavoritePlantParams{PlantID: c.Param("taxon"), UserID: visitorID})
+	if err != nil {
+		return echo.ErrInternalServerError
+	}
+
+	row, err := h.queries.GetPlantWithInatrualist(c.Request().Context(), models.GetPlantWithInatrualistParams{UserID: visitorID, ID: c.Param("taxon")})
+	if err != nil {
+		return echo.ErrInternalServerError
+	}
+	return c.Render(http.StatusOK, "partials/favorite_button.gohtml", PlantDetailData{
+		Plant:            toPlantViewFromRow(row),
+		Summary:          row.Summary.String,
+		ImageURL:         row.ImageUrl.String,
+		ImageAttribution: row.Attribution.String,
+		IsFavorited:      row.IsFavorited})
+}
+
+func (h *Handler) FavoritesList(c *echo.Context) error {
+	visitorID := GetVisitorID(c)
+
+	rows, err := h.queries.GetFavoritePlants(c.Request().Context(), visitorID)
+	if err != nil {
+		return echo.ErrInternalServerError
+	}
+
+	plants := make([]PlantView, len(rows))
+	for i, r := range rows {
+		plants[i] = PlantView{
+			Taxon:      r.ID,
+			Common:     r.Common,
+			Scientific: r.Scientific.String,
+			Section:    r.Section.String,
+			Color:      r.Color.String,
+			Bloom:      r.Bloom.String,
+			Height:     r.Height.String,
+			Sun:        r.Sun.String,
+			Soil:       r.Water.String,
+			ImageURL:   r.ImageUrl.String,
+			Price:      formatPrice(r.Price),
+			Available:  r.Available,
+		}
+	}
+
+	data := struct {
+		Plants []PlantView
+	}{
+		Plants: plants,
+	}
+
+	return c.Render(http.StatusOK, "pages/favorites.gohtml", data)
+}
 func customHTTPErrorHandler(c *echo.Context, err error) {
 	if resp, uErr := echo.UnwrapResponse(c.Response()); uErr == nil {
 		if resp.Committed {

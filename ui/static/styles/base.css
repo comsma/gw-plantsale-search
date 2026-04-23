@@ -6,13 +6,16 @@
 @source "../../../ui/views/**/*.gohtml";
 
 @theme {
-  --color-elderberry: #3E2148;
-  --color-stem: #35723F;
-  --color-prickly: #8CA45D;
-  --color-dragonfly: #F3F1EF;
-  --color-monarch: #DC582A;
-  --color-goldenrod: #F1BE48;
+  --color-wild-ones: #636466;
+  --color-stem: #35723f;
+  --color-prickly: #8ca45d;
   --color-chickadee: #414042;
+  --color-dragonfly: #f3f1ef;
+
+  --color-goldenrod: #f1be48;
+  --color-monarch: #dc582a;
+  --color-coneflower: #a15a95;
+  --color-elderberry: #3e2148;
   --color-line: #dfd9d4;
   --color-soft: #ebe6e2;
 
@@ -26,41 +29,38 @@
   color-scheme: light;
 
   /* Surfaces */
-  --color-base-100: #F3F1EF;   /* dragonfly — page background */
-  --color-base-200: #ebe6e2;   /* soft — card/panel backgrounds */
-  --color-base-300: #dfd9d4;   /* line — borders, dividers */
-  --color-base-content: #414042; /* chickadee — body text */
+  --color-base-100: #f3f1ef; /* dragonfly — page background */
+  --color-base-200: #ebe6e2; /* soft — card/panel backgrounds */
+  --color-base-300: #dfd9d4; /* line — borders, dividers */
+  --color-base-content: var(--color-chickadee); /* chickadee — body text */
 
-  /* Primary — stem green (CTAs, active states) */
-  --color-primary: #35723F;
-  --color-primary-content: #ffffff;
+  --color-primary: var(--color-stem);
+  --color-primary-content: #f3f1ef;
 
-  /* Secondary — prickly olive (secondary actions) */
-  --color-secondary: #8CA45D;
-  --color-secondary-content: #ffffff;
+  --color-secondary: var(--color-prickly);
+  --color-secondary-content: var(--color-dragonfly);
 
-  /* Accent — monarch orange (highlights, badges) */
-  --color-accent: #DC582A;
-  --color-accent-content: #ffffff;
+  --color-accent: var(--color-elderberry);
+  --color-accent-content: var(--color-dragonfly);
 
   /* Neutral — elderberry purple (header, dark panels) */
-  --color-neutral: #3E2148;
+  --color-neutral: #3e2148;
   --color-neutral-content: #ffffff;
 
   /* State colors */
-  --color-info: #8CA45D;
+  --color-info: #8ca45d;
   --color-info-content: #ffffff;
-  --color-success: #35723F;
+  --color-success: #35723f;
   --color-success-content: #ffffff;
-  --color-warning: #F1BE48;
+  --color-warning: #f1be48;
   --color-warning-content: #414042;
-  --color-error: #DC582A;
+  --color-error: #dc582a;
   --color-error-content: #ffffff;
 
   /* Shape tokens */
-  --radius-selector: 9999px;  /* pill-shaped selects/toggles */
-  --radius-field: 1rem;       /* inputs, selects */
-  --radius-box: 1.5rem;       /* cards, panels */
+  --radius-selector: 9999px; /* pill-shaped selects/toggles */
+  --radius-field: 1rem; /* inputs, selects */
+  --radius-box: 1.5rem; /* cards, panels */
   --border: 1px;
   --depth: 1;
   --noise: 0;
@@ -68,7 +68,12 @@
 
 /* ── Splash gradient ─────────────────────────────────────────────── */
 .splash-bg {
-  background: radial-gradient(circle at top left, rgba(140, 164, 93, 0.22), transparent 30%),
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(140, 164, 93, 0.22),
+      transparent 30%
+    ),
     linear-gradient(145deg, #4c2859 0%, #3e2148 45%, #2f6a39 100%);
 }
 
@@ -129,11 +134,6 @@ body.modal-open {
 .toast-msg.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
-}
-
-/* ── Save button saved state ─────────────────────────────────────── */
-.pd-fav-btn.saved {
-  background-color: #35723f;
 }
 
 /* ── Classes used in JS-generated HTML (table rows + mobile cards) ─ */

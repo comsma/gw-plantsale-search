@@ -25,7 +25,7 @@ ORDER BY p.common;
 
 -- name: SearchPlants :many
 SELECT
-    id,
+    plant_search_view.id,
     common,
     scientific,
     inatrualist_taxon_id,
@@ -38,8 +38,11 @@ SELECT
     water,
     price,
     available,
-    image_url
+    image_url,
+    EXISTS(SELECT 1 FROM favorites_list f WHERE f.plant_id = plant_search_view.id AND f.user_id = sqlc.arg(user_id)) AS is_favorited
+
 FROM plant_search_view
+LEFT JOIN favorites_list f ON f.plant_id = plant_search_view.id
 WHERE available = true
   AND (
     sqlc.arg(query)::text = ''
@@ -72,9 +75,12 @@ SELECT
     p.available,
     i.summary,
     i.image_url,
-    i.attribution
+    i.attribution,
+    EXISTS(SELECT 1 FROM favorites_list f WHERE f.plant_id = p.id AND f.user_id = sqlc.arg(user_id)) AS is_favorited
+
 FROM plants p
 LEFT JOIN inatrualist i ON i.plant_id = p.id
+LEFT JOIN favorites_list f ON f.plant_id = p.id
 WHERE p.id = sqlc.arg(id)
 LIMIT 1;
 
@@ -127,6 +133,43 @@ INSERT INTO inatrualist (
     image_url    = EXCLUDED.image_url,
     attribution  = EXCLUDED.attribution,
     last_updated = NOW();
+
+-- name: CreateFavoritePlant :exec
+INSERT INTO favorites_list (
+    plant_id,
+    user_id
+) values (
+          sqlc.arg(plant_id),
+          sqlc.arg(user_id)
+         );
+
+-- name: DeleteFavoritePlant :exec
+DELETE FROM favorites_list
+    where
+        plant_id = sqlc.arg(plant_id) AND
+        user_id = sqlc.arg(user_id);
+
+-- name: GetFavoritePlants :many
+SELECT
+    p.id,
+    p.common,
+    p.scientific,
+    p.inatrualist_taxon_id,
+    p.section,
+    p.color,
+    p.bloom,
+    p.height,
+    p.height_sort,
+    p.sun,
+    p.water,
+    p.price,
+    p.available,
+    i.image_url
+FROM favorites_list f
+INNER JOIN plants p ON p.id = f.plant_id
+LEFT JOIN inatrualist i ON i.plant_id = p.id
+WHERE f.user_id = sqlc.arg(user_id)
+ORDER BY p.common ASC;
 
 -- name: GetDistinctSections :many
 SELECT DISTINCT section FROM plants

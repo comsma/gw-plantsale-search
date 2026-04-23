@@ -43,6 +43,13 @@ func main() {
 					{Name: "up", Usage: "apply all pending migrations", Action: runMigrateUp},
 					{Name: "down", Usage: "roll back the last migration", Action: runMigrateDown},
 					{Name: "status", Usage: "print migration status", Action: runMigrateStatus},
+					{Name: "create", Usage: "create new migration file", Action: runMigrateCreate, Flags: []cli.Flag{
+						&cli.StringFlag{
+							Name:    "name",
+							Aliases: []string{"n"},
+							Usage:   "name of the migration",
+						},
+					}},
 				},
 			},
 			{
@@ -137,6 +144,17 @@ func runMigrateStatus(_ *cli.Context) error {
 	goose.SetBaseFS(migrations.FS)
 	goose.SetDialect("postgres")
 	return goose.Status(db, ".")
+}
+
+func runMigrateCreate(cliCtx *cli.Context) error {
+	db, err := openSQLDB()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	goose.SetBaseFS(migrations.FS)
+	goose.SetDialect("postgres")
+	return goose.Create(db, "./internal/migrations", cliCtx.String("name"), "sql")
 }
 
 // ── ingest ───────────────────────────────────────────────────────────────────

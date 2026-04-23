@@ -1,5 +1,6 @@
 .idea
 .env
+.envrc
 node_modules
 
 ui/static/css/output.css

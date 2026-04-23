@@ -43,6 +43,9 @@ func Start(db *pgxpool.Pool, syncer *indexer.Syncer) error {
 	e.GET("/", h.Home)
 	e.GET("/plants", h.PlantList)
 	e.GET("/plants/:taxon", h.PlantDetail)
+	e.GET("/favorites", h.FavoritesList)
+	e.POST("/plants/:taxon/favorite", h.FavoritePlant)
+	e.DELETE("/plants/:taxon/favorite", h.UnfavoritePlant)
 	e.POST("/admin/inat/resync", h.TriggerInatResync)
 
 	syncer.Trigger()

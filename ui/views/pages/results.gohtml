@@ -3,10 +3,6 @@
 {{ define "content" }}
   {{ template "header" }}
   <main class="max-w-[1150px] mx-auto px-4 pt-[22px] pb-6">
-    <!-- Top summary row -->
-    <div class="flex gap-2.5 flex-wrap mb-4">
-      <a href="/" class="btn btn-outline border-2">← Start Over</a>
-    </div>
 
     <div class="card bg-white">
       <div class="card-body">
@@ -18,7 +14,7 @@
           hx-get="/plants"
           hx-target="#plant-list"
           hx-swap="innerHTML"
-          hx-trigger="change, input delay:300ms"
+          hx-trigger="load, change, input delay:300ms"
           hx-push-url="true"
           class="mt-[14px] flex flex-col gap-2"
         >
@@ -124,12 +120,9 @@
 
         <!-- Plant list target -->
         <div id="plant-list" class="mt-[18px]">
-          {{ template "plant_list" . }}
+          <p class="text-center text-[#837d83] py-8">Loading plants…</p>
         </div>
       </div>
     </div>
   </main>
-
-  {{ template "plant_drawer" . }}
-  {{ template "toast" . }}
 {{ end }}

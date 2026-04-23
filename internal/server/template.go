@@ -62,7 +62,7 @@ func NewTemplateCache() (*Renderer, error) {
 	for _, partial := range partials {
 		fileName := filepath.Base(partial)
 		mapKey := "partials/" + fileName
-		ts, err := template.New(fileName).ParseFS(ui.Views, partial)
+		ts, err := template.New(fileName).ParseFS(ui.Views, "views/partials/*.gohtml")
 		if err != nil {
 			return nil, err
 		}

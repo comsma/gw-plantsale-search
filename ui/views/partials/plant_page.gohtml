@@ -1,58 +1,6 @@
 {{ define "plant_page" }}
   {{ range .Plants }}
-    <button
-      class="plant-card text-left bg-white rounded-[18px] border border-line shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-      hx-get="/plants/{{ .Taxon }}"
-      hx-target="#drawer-content"
-      hx-swap="innerHTML"
-      hx-on::after-request="window.dispatchEvent(new Event('open-drawer'))"
-      type="button"
-    >
-      <!-- Image -->
-      <div
-        class="aspect-[4/3] bg-gradient-to-br from-prickly/[0.15] to-stem/10 overflow-hidden"
-      >
-        {{ if .ImageURL }}
-          <img
-            src="{{ .ImageURL }}"
-            alt="{{ .Common }}"
-            class="w-full h-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-        {{ else }}
-          <div
-            class="w-full h-full grid place-items-center text-[2.5rem] opacity-40"
-          >
-            🌿
-          </div>
-        {{ end }}
-      </div>
-
-      <!-- Body -->
-      <div class="p-4">
-        <p class="font-black text-elderberry text-[1rem] leading-snug m-0">
-          {{ .Common }}
-        </p>
-        <p class="italic text-[#8a858b] text-[0.78rem] mt-0.5 mb-3 m-0">
-          {{ .Scientific }}
-        </p>
-
-        <div class="flex flex-wrap gap-1.5 mb-3">
-          {{ if .Sun }}<span class="plant-tag">{{ .Sun }}</span>{{ end }}
-          {{ if .Soil }}<span class="plant-tag">{{ .Soil }}</span>{{ end }}
-          {{ if .Bloom }}<span class="plant-tag">{{ .Bloom }}</span>{{ end }}
-          {{ if .Height }}<span class="plant-tag">{{ .Height }}</span>{{ end }}
-        </div>
-
-        <div class="flex items-center justify-between">
-          <span class="font-black text-stem text-[0.95rem]">{{ .Price }}</span>
-          <span class="text-[0.78rem] font-black text-elderberry/60"
-            >Details →</span
-          >
-        </div>
-      </div>
-    </button>
+    {{ template "plant_card" . }}
   {{ end }}
   {{ if .HasMore }}
     <div
