@@ -3,7 +3,9 @@
 {{ define "title" }}Server Error{{ end }}
 
 {{ define "content" }}
-  <div class="flex min-h-screen flex-col items-center justify-center text-white bg-elderberry">
+  <div
+    class="flex min-h-screen flex-col items-center justify-center text-white bg-elderberry"
+  >
     <h1 class="text-6xl font-bold font-kalam">500</h1>
     <p class="mt-4 text-xl">Something went wrong.</p>
     {{ if .Error }}<p class="mt-2 text-sm opacity-70">{{ .Error }}</p>{{ end }}
