@@ -3,10 +3,10 @@
   <html lang="en">
     <head>
       <meta charset="UTF-8" />
-      <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-      />
+      <meta name="theme-color" content="#3E2148">
+      <meta name="theme-color" content="#3E2148" media="(prefers-color-scheme: dark)">
+      <meta name="theme-color" content="#3E2148" media="(prefers-color-scheme: light)">
+      <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
       <title>What Should I Plant Here? — Wild Ones Gibson Woods</title>
       <meta
         name="description"
@@ -22,6 +22,7 @@
         href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Lato:wght@400;700;900&family=Lora:ital,wght@0,400;1,400&display=swap"
         rel="stylesheet"
       />
+      <link rel="manifest" href="/static/manifest.json" />
       <link rel="stylesheet" href="/static/css/output.css" />
       <script
         defer
@@ -32,8 +33,11 @@
         src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
       ></script>
     </head>
-    <body class="font-lato bg-dragonfly text-chickadee min-h-screen">
-      {{ template "content" . }}
+    <body class="font-lato bg-dragonfly text-chickadee min-h-screen flex flex-col">
+      {{ template "header" }}
+      <main id="content" class="flex-1">
+        {{ template "content" . }}
+      </main>
       {{ template "footer" . }}
     </body>
   </html>

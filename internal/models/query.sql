@@ -42,7 +42,6 @@ SELECT
     EXISTS(SELECT 1 FROM favorites_list f WHERE f.plant_id = plant_search_view.id AND f.user_id = sqlc.arg(user_id)) AS is_favorited
 
 FROM plant_search_view
-LEFT JOIN favorites_list f ON f.plant_id = plant_search_view.id
 WHERE available = true
   AND (
     sqlc.arg(query)::text = ''

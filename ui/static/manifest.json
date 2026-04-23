@@ -1,0 +1,17 @@
+{
+  "name": "What Should I Plant Here? — Wild Ones Gibson Woods",
+  "short_name": "Plant Here",
+  "description": "Find native plants from the Wild Ones Gibson Woods plant sale.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#3E2148",
+  "theme_color": "#3E2148",
+  "icons": [
+    {
+      "src": "/static/images/Wild-Ones-Chapter-Logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

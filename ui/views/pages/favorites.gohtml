@@ -1,101 +1,34 @@
 {{ template "layout" . }}
 
 {{ define "content" }}
-  {{ template "header" }}
+  <main class="max-w-6xl mx-auto px-4 py-6" hx-history="false" hx-boost="false">
+    <div class="card bg-white">
+      <div class="card-body">
+        <div class="card-title text-elderberry">
+          <h2 class="font-kalam text-2xl">My Favorites</h2>
+        </div>
 
-
-  <div class="mx-auto max-w-6xl px-4 py-8" hx-history="false">
-    <div class="mb-8">
-      <h1 class="font-kalam text-elderberry text-5xl mb-2">My Favorites</h1>
-      <p class="text-chickadee/70 text-lg">Your personalized plant selection</p>
-    </div>
-
-    {{ if .Plants }}
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {{ range .Plants }}
-          <a
-            href="/plants/{{ .Taxon }}"
-            hx-boost="true"
-            class="group bg-white/60 backdrop-blur-sm rounded-[24px] p-5 border border-line/80 shadow-sm hover:shadow-lg hover:border-stem/40 transition-all duration-200"
-          >
-            <!-- Image -->
-            <div
-              class="aspect-square rounded-[20px] overflow-hidden bg-gradient-to-br from-prickly/20 via-stem/5 to-elderberry/10 border border-line/60 mb-4"
-            >
-              {{ if .ImageURL }}
-                <img
-                  src="{{ .ImageURL }}"
-                  alt="{{ .Common }}"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                />
-              {{ else }}
-                <div
-                  class="w-full h-full flex items-center justify-center text-[#7b757c]"
-                >
-                  <div class="text-center">
-                    <div class="text-[3rem] mb-2 opacity-50">🌿</div>
-                    <div class="text-[0.85rem] font-semibold">No photo</div>
-                  </div>
-                </div>
-              {{ end }}
-            </div>
-
-            <!-- Plant info -->
-            <div>
-              <h3
-                class="font-kalam text-elderberry text-2xl mb-1 group-hover:text-stem transition-colors"
-              >
-                {{ .Common }}
-              </h3>
-              <p class="italic text-[#8a858b] text-sm mb-3">
-                {{ .Scientific }}
-              </p>
-
-              <div class="flex flex-wrap gap-2 mb-3">
-                {{ if .Section }}
-                  <span
-                    class="inline-flex items-center bg-stem/10 text-stem border border-stem/20 rounded-full px-3 py-1 text-[0.75rem] font-bold"
-                  >
-                    {{ .Section }}
-                  </span>
-                {{ end }}
-                {{ if .Color }}
-                  <span
-                    class="inline-flex items-center bg-elderberry/10 text-elderberry border border-elderberry/20 rounded-full px-3 py-1 text-[0.75rem] font-bold"
-                  >
-                    {{ .Color }}
-                  </span>
-                {{ end }}
-              </div>
-
-              <div
-                class="flex items-center justify-between text-sm text-chickadee/70"
-              >
-                <span class="font-bold text-stem">{{ .Price }}</span>
-                {{ if not .Available }}
-                  <span class="text-monarch text-xs font-bold"
-                    >Unavailable</span
-                  >
-                {{ end }}
-              </div>
-            </div>
-          </a>
+        {{ if .Plants }}
+          <div class="grid grid-cols-3 gap-4 max-md:grid-cols-1 mt-[18px]">
+            {{ range .Plants }}
+              {{ template "plant_card" . }}
+            {{ end }}
+          </div>
+        {{ else }}
+          <div class="text-center py-16">
+            <div class="text-[5rem] mb-4 opacity-30">🌱</div>
+            <h2 class="font-kalam text-elderberry text-3xl mb-3">
+              No favorites yet
+            </h2>
+            <p class="text-chickadee/70 mb-6 text-lg">
+              Start exploring plants and add your favorites!
+            </p>
+            <a href="/plants" class="btn btn-primary inline-flex">
+              Browse Plants
+            </a>
+          </div>
         {{ end }}
       </div>
-    {{ else }}
-      <div class="text-center py-16">
-        <div class="text-[5rem] mb-4 opacity-30">🌱</div>
-        <h2 class="font-kalam text-elderberry text-3xl mb-3">
-          No favorites yet
-        </h2>
-        <p class="text-chickadee/70 mb-6 text-lg">
-          Start exploring plants and add your favorites!
-        </p>
-        <a href="/plants" class="btn btn-primary inline-flex">
-          Browse Plants
-        </a>
-      </div>
-    {{ end }}
-  </div>
+    </div>
+  </main>
 {{ end }}

@@ -195,13 +195,15 @@ func (h *Handler) PlantList(c *echo.Context) error {
 	}
 
 	isHX := c.Request().Header.Get("HX-Request") == "true"
-	if isHX && offset > 0 {
+	isBoosted := c.Request().Header.Get("HX-Boosted") == "true"
+	isHistoryRestore := c.Request().Header.Get("HX-History-Restore-Request") == "true"
+	if !isHX || isBoosted || isHistoryRestore {
+		return c.Render(http.StatusOK, "pages/results.gohtml", data)
+	}
+	if offset > 0 {
 		return c.Render(http.StatusOK, "partials/plant_page.gohtml", data)
 	}
-	if isHX {
-		return c.Render(http.StatusOK, "partials/plant_list.gohtml", data)
-	}
-	return c.Render(http.StatusOK, "pages/results.gohtml", data)
+	return c.Render(http.StatusOK, "partials/plant_list.gohtml", data)
 }
 
 func (h *Handler) TriggerInatResync(c *echo.Context) error {
@@ -287,18 +289,19 @@ func (h *Handler) FavoritesList(c *echo.Context) error {
 	plants := make([]PlantView, len(rows))
 	for i, r := range rows {
 		plants[i] = PlantView{
-			Taxon:      r.ID,
-			Common:     r.Common,
-			Scientific: r.Scientific.String,
-			Section:    r.Section.String,
-			Color:      r.Color.String,
-			Bloom:      r.Bloom.String,
-			Height:     r.Height.String,
-			Sun:        r.Sun.String,
-			Soil:       r.Water.String,
-			ImageURL:   r.ImageUrl.String,
-			Price:      formatPrice(r.Price),
-			Available:  r.Available,
+			Taxon:       r.ID,
+			Common:      r.Common,
+			Scientific:  r.Scientific.String,
+			Section:     r.Section.String,
+			Color:       r.Color.String,
+			Bloom:       r.Bloom.String,
+			Height:      r.Height.String,
+			Sun:         r.Sun.String,
+			Soil:        r.Water.String,
+			ImageURL:    r.ImageUrl.String,
+			Price:       formatPrice(r.Price),
+			Available:   r.Available,
+			IsFavorited: true,
 		}
 	}
 
