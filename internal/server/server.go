@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/alexedwards/scs/v2"
+	"github.com/comsma/gw-plantsale-search/internal/config"
 	"github.com/comsma/gw-plantsale-search/internal/indexer"
 	"github.com/comsma/gw-plantsale-search/internal/models"
 	"github.com/comsma/gw-plantsale-search/ui"
@@ -14,7 +15,7 @@ import (
 	"github.com/labstack/echo/v5/middleware"
 )
 
-func Start(db *pgxpool.Pool, syncer *indexer.Syncer) error {
+func Start(db *pgxpool.Pool, syncer *indexer.Syncer, cfg config.Config) error {
 	e := echo.New()
 
 	sessionManager := scs.New()
@@ -39,7 +40,7 @@ func Start(db *pgxpool.Pool, syncer *indexer.Syncer) error {
 
 	e.StaticFS("/static", staticFS)
 
-	h := &Handler{queries: models.New(db), syncer: syncer}
+	h := &Handler{queries: models.New(db), syncer: syncer, config: &cfg, session: sessionManager}
 	e.GET("/", h.Home)
 	e.GET("/plants", h.PlantList)
 	e.GET("/plants/:taxon", h.PlantDetail)
@@ -47,6 +48,9 @@ func Start(db *pgxpool.Pool, syncer *indexer.Syncer) error {
 	e.POST("/plants/:taxon/favorite", h.FavoritePlant)
 	e.DELETE("/plants/:taxon/favorite", h.UnfavoritePlant)
 	e.POST("/admin/inat/resync", h.TriggerInatResync)
+	e.GET("/report", h.Report)
+	e.POST("/report", h.ReportLogin)
+	e.GET("/report/csv", h.ReportCSV)
 
 	syncer.Trigger()
 

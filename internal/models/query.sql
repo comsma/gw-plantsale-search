@@ -170,6 +170,16 @@ LEFT JOIN inatrualist i ON i.plant_id = p.id
 WHERE f.user_id = sqlc.arg(user_id)
 ORDER BY p.common ASC;
 
+-- name: GetFavoriteCounts :many
+SELECT
+    p.id,
+    p.common,
+    COUNT(f.id) AS favorite_count
+FROM plants p
+INNER JOIN favorites_list f ON f.plant_id = p.id
+GROUP BY p.id, p.common
+ORDER BY favorite_count DESC, p.common ASC;
+
 -- name: GetDistinctSections :many
 SELECT DISTINCT section FROM plants
 WHERE section IS NOT NULL AND section != '' AND available = true

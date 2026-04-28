@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/comsma/gw-plantsale-search/internal/config"
 	"github.com/comsma/gw-plantsale-search/internal/indexer"
 	"github.com/comsma/gw-plantsale-search/internal/migrations"
 	"github.com/comsma/gw-plantsale-search/internal/models"
@@ -101,6 +102,8 @@ func openSQLDB() (*sql.DB, error) {
 // ── serve ────────────────────────────────────────────────────────────────────
 
 func runServe(_ *cli.Context) error {
+	cfg := config.Load()
+
 	db, err := openDB()
 	if err != nil {
 		return err
@@ -108,7 +111,7 @@ func runServe(_ *cli.Context) error {
 	defer db.Close()
 
 	syncer := indexer.New(models.New(db))
-	return server.Start(db, syncer)
+	return server.Start(db, syncer, cfg)
 }
 
 // ── migrate ──────────────────────────────────────────────────────────────────

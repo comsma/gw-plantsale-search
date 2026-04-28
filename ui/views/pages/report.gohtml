@@ -1,0 +1,61 @@
+{{ template "layout" . }}
+
+{{ define "content" }}
+  <main class="max-w-2xl mx-auto px-4 py-6">
+    <div class="card bg-white">
+      <div class="card-body">
+        <div class="card-title text-elderberry flex justify-between items-center">
+          <h2 class="font-kalam text-2xl">Favorites Report</h2>
+          {{ if .Counts }}
+            <a href="/report/csv" class="btn btn-sm btn-outline">Download CSV</a>
+          {{ end }}
+        </div>
+
+        {{ if .Counts }}
+          <div class="mt-4 mb-6 flex gap-8">
+            <div>
+              <div class="text-3xl font-bold text-elderberry">{{ .TotalUnique }}</div>
+              <div class="text-sm text-chickadee/70">unique plants favorited</div>
+            </div>
+            <div>
+              <div class="text-3xl font-bold text-elderberry">{{ .TotalFaves }}</div>
+              <div class="text-sm text-chickadee/70">total favorites</div>
+            </div>
+          </div>
+
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>Plant</th>
+                <th class="text-right">Favorites</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{ range .Counts }}
+                <tr>
+                  <td>{{ .Common }}</td>
+                  <td class="text-right">{{ .FavoriteCount }}</td>
+                </tr>
+              {{ end }}
+            </tbody>
+          </table>
+        {{ else }}
+          <p class="text-sm text-chickadee/60 mb-4">Enter the password to view the report.</p>
+          {{ if .Error }}
+            <div class="alert alert-error mb-4">{{ .Error }}</div>
+          {{ end }}
+          <form method="POST" action="/report" class="flex gap-2 max-w-sm">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              class="input input-bordered flex-1"
+              autofocus
+            />
+            <button type="submit" class="btn btn-primary">View</button>
+          </form>
+        {{ end }}
+      </div>
+    </div>
+  </main>
+{{ end }}

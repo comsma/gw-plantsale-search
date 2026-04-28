@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/alexedwards/scs/v2"
+	"github.com/comsma/gw-plantsale-search/internal/config"
 	"github.com/comsma/gw-plantsale-search/internal/indexer"
 	"github.com/comsma/gw-plantsale-search/internal/models"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -19,6 +21,7 @@ type Handler struct {
 	session *scs.SessionManager
 	queries *models.Queries
 	syncer  *indexer.Syncer
+	config  *config.Config
 }
 
 // PlantView maps models.Plant to template-compatible field names.
@@ -313,6 +316,62 @@ func (h *Handler) FavoritesList(c *echo.Context) error {
 
 	return c.Render(http.StatusOK, "pages/favorites.gohtml", data)
 }
+
+type ReportData struct {
+	Counts      []models.GetFavoriteCountsRow
+	TotalUnique int
+	TotalFaves  int64
+	Error       string
+}
+
+func (h *Handler) Report(c *echo.Context) error {
+	if h.session.GetBool(c.Request().Context(), "ReportAuthenticated") {
+		rows, err := h.queries.GetFavoriteCounts(c.Request().Context())
+		if err != nil {
+			return err
+		}
+		var total int64
+		for _, r := range rows {
+			total += r.FavoriteCount
+		}
+		return c.Render(http.StatusOK, "pages/report.gohtml", ReportData{
+			Counts:      rows,
+			TotalUnique: len(rows),
+			TotalFaves:  total,
+		})
+	}
+	return c.Render(http.StatusOK, "pages/report.gohtml", ReportData{})
+}
+
+func (h *Handler) ReportCSV(c *echo.Context) error {
+	if !h.session.GetBool(c.Request().Context(), "ReportAuthenticated") {
+		return c.Redirect(http.StatusSeeOther, "/report")
+	}
+	rows, err := h.queries.GetFavoriteCounts(c.Request().Context())
+	if err != nil {
+		return err
+	}
+	c.Response().Header().Set("Content-Type", "text/csv")
+	c.Response().Header().Set("Content-Disposition", `attachment; filename="favorites-report.csv"`)
+	c.Response().WriteHeader(http.StatusOK)
+	w := csv.NewWriter(c.Response())
+	_ = w.Write([]string{"Plant", "Favorites"})
+	for _, r := range rows {
+		_ = w.Write([]string{r.Common, strconv.FormatInt(r.FavoriteCount, 10)})
+	}
+	w.Flush()
+	return w.Error()
+}
+
+func (h *Handler) ReportLogin(c *echo.Context) error {
+	password := c.FormValue("password")
+	if password == h.config.ReportPassword && h.config.ReportPassword != "" {
+		h.session.Put(c.Request().Context(), "ReportAuthenticated", true)
+		return c.Redirect(http.StatusSeeOther, "/report")
+	}
+	return c.Render(http.StatusOK, "pages/report.gohtml", ReportData{Error: "Incorrect password"})
+}
+
 func customHTTPErrorHandler(c *echo.Context, err error) {
 	if resp, uErr := echo.UnwrapResponse(c.Response()); uErr == nil {
 		if resp.Committed {
