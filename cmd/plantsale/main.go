@@ -191,6 +191,7 @@ func ingestPlants(cliCtx *cli.Context) error {
 			Bloom:              pgtype.Text{String: plant.Bloom, Valid: plant.Bloom != ""},
 			Height:             pgtype.Text{String: plant.Height, Valid: plant.Height != ""},
 			HeightSort:         pgtype.Text{String: fmt.Sprintf("%g", plant.HeightSort), Valid: true},
+			BloomSort:          bloomSort(plant.Bloom),
 			Sun:                pgtype.Text{String: plant.Sun, Valid: plant.Sun != ""},
 			Water:              pgtype.Text{String: plant.Soil, Valid: plant.Soil != ""},
 			Price:              parsePrice(plant.Price),
@@ -235,6 +236,22 @@ func parsePrice(s string) pgtype.Numeric {
 		return pgtype.Numeric{Valid: false}
 	}
 	return pgtype.Numeric{Int: n, Exp: exp, Valid: true}
+}
+
+func bloomSort(bloom string) pgtype.Int4 {
+	months := map[string]int32{
+		"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4,
+		"May": 5, "Jun": 6, "Jul": 7, "Aug": 8,
+		"Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12,
+	}
+	start := bloom
+	if i := strings.Index(bloom, "-"); i >= 0 {
+		start = bloom[:i]
+	}
+	if n, ok := months[start]; ok {
+		return pgtype.Int4{Int32: n, Valid: true}
+	}
+	return pgtype.Int4{Valid: false}
 }
 
 func isDuplicateKey(err error) bool {

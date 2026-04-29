@@ -42,6 +42,7 @@ INSERT INTO plants (
     bloom,
     height,
     height_sort,
+    bloom_sort,
     sun,
     water,
     price,
@@ -59,7 +60,8 @@ INSERT INTO plants (
     $10,
     $11,
     $12,
-    $13
+    $13,
+    $14
 )
 `
 
@@ -73,6 +75,7 @@ type CreatePlantParams struct {
 	Bloom              pgtype.Text
 	Height             pgtype.Text
 	HeightSort         pgtype.Text
+	BloomSort          pgtype.Int4
 	Sun                pgtype.Text
 	Water              pgtype.Text
 	Price              pgtype.Numeric
@@ -90,6 +93,7 @@ func (q *Queries) CreatePlant(ctx context.Context, arg CreatePlantParams) error 
 		arg.Bloom,
 		arg.Height,
 		arg.HeightSort,
+		arg.BloomSort,
 		arg.Sun,
 		arg.Water,
 		arg.Price,
@@ -116,7 +120,7 @@ func (q *Queries) DeleteFavoritePlant(ctx context.Context, arg DeleteFavoritePla
 }
 
 const getAllPlants = `-- name: GetAllPlants :many
-SELECT id, common, scientific, inatrualist_taxon_id, section, color, bloom, height, height_sort, sun, water, price, available, fts_common, fts_scientific FROM plants ORDER BY common
+SELECT id, common, scientific, inatrualist_taxon_id, section, color, bloom, height, height_sort, sun, water, price, available, fts_common, fts_scientific, bloom_sort FROM plants ORDER BY common
 `
 
 func (q *Queries) GetAllPlants(ctx context.Context) ([]Plant, error) {
@@ -144,6 +148,7 @@ func (q *Queries) GetAllPlants(ctx context.Context) ([]Plant, error) {
 			&i.Available,
 			&i.FtsCommon,
 			&i.FtsScientific,
+			&i.BloomSort,
 		); err != nil {
 			return nil, err
 		}
@@ -166,6 +171,7 @@ SELECT
     p.bloom,
     p.height,
     p.height_sort,
+    p.bloom_sort,
     p.sun,
     p.water,
     p.price,
@@ -188,6 +194,7 @@ type GetAllPlantsWithInatrualistRow struct {
 	Bloom              pgtype.Text
 	Height             pgtype.Text
 	HeightSort         pgtype.Text
+	BloomSort          pgtype.Int4
 	Sun                pgtype.Text
 	Water              pgtype.Text
 	Price              pgtype.Numeric
@@ -216,6 +223,7 @@ func (q *Queries) GetAllPlantsWithInatrualist(ctx context.Context) ([]GetAllPlan
 			&i.Bloom,
 			&i.Height,
 			&i.HeightSort,
+			&i.BloomSort,
 			&i.Sun,
 			&i.Water,
 			&i.Price,
@@ -360,6 +368,7 @@ SELECT
     p.bloom,
     p.height,
     p.height_sort,
+    p.bloom_sort,
     p.sun,
     p.water,
     p.price,
@@ -382,6 +391,7 @@ type GetFavoritePlantsRow struct {
 	Bloom              pgtype.Text
 	Height             pgtype.Text
 	HeightSort         pgtype.Text
+	BloomSort          pgtype.Int4
 	Sun                pgtype.Text
 	Water              pgtype.Text
 	Price              pgtype.Numeric
@@ -408,6 +418,7 @@ func (q *Queries) GetFavoritePlants(ctx context.Context, userID string) ([]GetFa
 			&i.Bloom,
 			&i.Height,
 			&i.HeightSort,
+			&i.BloomSort,
 			&i.Sun,
 			&i.Water,
 			&i.Price,
@@ -435,6 +446,7 @@ SELECT
     p.bloom,
     p.height,
     p.height_sort,
+    p.bloom_sort,
     p.sun,
     p.water,
     p.price,
@@ -466,6 +478,7 @@ type GetPlantWithInatrualistRow struct {
 	Bloom              pgtype.Text
 	Height             pgtype.Text
 	HeightSort         pgtype.Text
+	BloomSort          pgtype.Int4
 	Sun                pgtype.Text
 	Water              pgtype.Text
 	Price              pgtype.Numeric
@@ -489,6 +502,7 @@ func (q *Queries) GetPlantWithInatrualist(ctx context.Context, arg GetPlantWithI
 		&i.Bloom,
 		&i.Height,
 		&i.HeightSort,
+		&i.BloomSort,
 		&i.Sun,
 		&i.Water,
 		&i.Price,
@@ -512,6 +526,7 @@ SELECT
     bloom,
     height,
     height_sort,
+    bloom_sort,
     sun,
     water,
     price,
@@ -533,6 +548,7 @@ ORDER BY
     CASE WHEN $2::text != '' THEN ts_rank(search_vector, websearch_to_tsquery('english', $2::text)) END DESC NULLS LAST,
     CASE WHEN $7::text = 'height' THEN height_sort END ASC NULLS LAST,
     CASE WHEN $7::text = 'price'  THEN price END ASC NULLS LAST,
+    CASE WHEN $7::text = 'bloom'  THEN bloom_sort END ASC NULLS LAST,
     common ASC
 `
 
@@ -556,6 +572,7 @@ type SearchPlantsRow struct {
 	Bloom              pgtype.Text
 	Height             pgtype.Text
 	HeightSort         pgtype.Text
+	BloomSort          pgtype.Int4
 	Sun                pgtype.Text
 	Water              pgtype.Text
 	Price              pgtype.Numeric
@@ -591,6 +608,7 @@ func (q *Queries) SearchPlants(ctx context.Context, arg SearchPlantsParams) ([]S
 			&i.Bloom,
 			&i.Height,
 			&i.HeightSort,
+			&i.BloomSort,
 			&i.Sun,
 			&i.Water,
 			&i.Price,

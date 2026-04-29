@@ -39,6 +39,7 @@ type Plant struct {
 	Available          bool
 	FtsCommon          interface{}
 	FtsScientific      interface{}
+	BloomSort          pgtype.Int4
 }
 
 type PlantSearchView struct {
@@ -51,6 +52,7 @@ type PlantSearchView struct {
 	Bloom              pgtype.Text
 	Height             pgtype.Text
 	HeightSort         pgtype.Text
+	BloomSort          pgtype.Int4
 	Sun                pgtype.Text
 	Water              pgtype.Text
 	Price              pgtype.Numeric
