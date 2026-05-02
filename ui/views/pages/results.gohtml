@@ -12,7 +12,7 @@
           hx-get="/plants"
           hx-target="#plant-list"
           hx-swap="innerHTML"
-          hx-trigger="load, change, input delay:300ms"
+          hx-trigger="change, input delay:300ms"
           hx-push-url="true"
           class="mt-4 flex flex-col gap-2"
         >
@@ -121,9 +121,23 @@
 
         <!-- Plant list target -->
         <div id="plant-list" class="mt-[18px]">
-          <p class="text-center text-[#837d83] py-8">Loading plants…</p>
+          {{ template "plant_list" . }}
         </div>
       </div>
     </div>
   </main>
+  <script>
+    document.addEventListener("htmx:historyRestore", function () {
+      var params = new URLSearchParams(window.location.search);
+      var form = document.getElementById("filter-form");
+      if (!form) return;
+      form.querySelectorAll("[name]").forEach(function (el) {
+        el.value = params.get(el.name) || "";
+      });
+      htmx.ajax("GET", "/plants" + window.location.search, {
+        target: "#plant-list",
+        swap: "innerHTML",
+      });
+    });
+  </script>
 {{ end }}
